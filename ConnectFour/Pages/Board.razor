@@ -1,0 +1,317 @@
+﻿@page "/"
+@using ConnectFour.Data
+@using MoreLinq
+
+<div class="board-container">
+    @for (int i = 0; i < HeaderBoxes.Count; i++)
+    {
+        var box = HeaderBoxes[i];
+
+        <div class="header" @onclick="() => PlayTurn(box)"></div>
+    }
+
+    @for (int i = 0; i < Boxes.Count; i++)
+    {
+        var box = Boxes[i];
+
+        <div class="box play-area">
+            @if (box.OccupiedBy != null)
+            {
+                if (box.OccupiedBy == User)
+                {
+                    <div class="game-piece" style="background-color: purple"></div>
+                }
+                else
+                {
+                    <div class="game-piece" style="background-color: black"></div>
+                }
+            }
+        </div>
+    }
+</div>
+<div>
+    <span>Wins: @Wins</span>
+    <span>Losses: @Losses</span>
+    <span>Draws: @Draws</span>
+</div>
+@if (Winner != null)
+{
+    <span>@Winner wins!</span>
+    <button @onclick="ResetBoard">Play Again</button>
+}
+
+@code {
+    public List<BoardBox> Boxes = new List<BoardBox>();
+    public List<BoardBox> HeaderBoxes = new List<BoardBox>();
+    public List<WinConditions> WinConditions = new List<WinConditions>();
+
+    private const string User = "user";
+    private const string CPU = "cpu";
+
+    private int Wins { get; set; }
+    private int Losses { get; set; }
+    private int Draws { get; set; }
+
+    public bool IsPlayerTurn { get; set; } = true;
+    public bool PieceFalling { get; set; }
+    public string? Winner { get; set; }
+
+    protected override void OnInitialized()
+    {
+        WinConditions.Add(new WinConditions { SpacesAway = 1, Direction = "add" });
+        WinConditions.Add(new WinConditions { SpacesAway = 6, Direction = "add" });
+        WinConditions.Add(new WinConditions { SpacesAway = 7, Direction = "add" });
+        WinConditions.Add(new WinConditions { SpacesAway = 8, Direction = "add" });
+        WinConditions.Add(new WinConditions { SpacesAway = 1, Direction = "subtract" });
+        WinConditions.Add(new WinConditions { SpacesAway = 6, Direction = "subtract" });
+        WinConditions.Add(new WinConditions { SpacesAway = 7, Direction = "subtract" });
+        WinConditions.Add(new WinConditions { SpacesAway = 8, Direction = "subtract" });
+
+        ResetBoard();
+    }
+
+    public async void PlayTurn(BoardBox headerBox)
+    {
+        if (!PieceFalling && IsPlayerTurn && Winner == null)
+        {
+            await PiecePlay(headerBox, User);
+            CheckWin(User);
+
+            if (Winner == null)
+            {
+                ComputerTurn();
+            }
+        }
+    }
+
+    private async void ComputerTurn()
+    {
+        if (Winner == null)
+        {
+            IsPlayerTurn = false;
+
+            var chosenHeader = HeaderBoxes.Shuffle().First();
+
+            await PiecePlay(chosenHeader, CPU);
+            CheckWin(CPU);
+
+            IsPlayerTurn = true;
+        }
+    }
+
+    private async Task PiecePlay(BoardBox headerBox, string player)
+    {
+        var finalPlayBox = new BoardBox();
+        PieceFalling = true;
+
+        var firstRowPlayBox = Boxes.First(x => x.Index == headerBox.Index);
+        var secondRowPlayBox = Boxes.First(x => x.Index == firstRowPlayBox.Index + 7);
+
+        await FallAnimation(firstRowPlayBox, player);
+
+        if (secondRowPlayBox.OccupiedBy != null)
+        {
+            finalPlayBox = firstRowPlayBox;
+        }
+        else
+        {
+            await FallAnimation(secondRowPlayBox, player);
+
+            var thirdRowPlayBox = Boxes.First(x => x.Index == secondRowPlayBox.Index + 7);
+
+            if (thirdRowPlayBox.OccupiedBy != null)
+            {
+                finalPlayBox = secondRowPlayBox;
+            }
+            else
+            {
+                await FallAnimation(thirdRowPlayBox, player);
+
+                var fourthRowPlayBox = Boxes.First(x => x.Index == thirdRowPlayBox.Index + 7);
+
+                if (fourthRowPlayBox.OccupiedBy != null)
+                {
+                    finalPlayBox = thirdRowPlayBox;
+                }
+                else
+                {
+                    await FallAnimation(fourthRowPlayBox, player);
+
+                    var fifthRowPlayBox = Boxes.First(x => x.Index == fourthRowPlayBox.Index + 7);
+
+                    if (fifthRowPlayBox.OccupiedBy != null)
+                    {
+                        finalPlayBox = fourthRowPlayBox;
+                    }
+                    else
+                    {
+                        await FallAnimation(fifthRowPlayBox, player);
+
+                        var sixthRowPlayBox = Boxes.First(x => x.Index == fifthRowPlayBox.Index + 7);
+
+                        if (sixthRowPlayBox.OccupiedBy != null)
+                        {
+                            finalPlayBox = fifthRowPlayBox;
+                        }
+                        else
+                        {
+                            finalPlayBox = sixthRowPlayBox;
+                        }
+                    }
+                }
+            }
+        }
+
+        finalPlayBox.OccupiedBy = player;
+        StateHasChanged();
+        PieceFalling = false;
+    }
+
+    private void CheckWin(string player)
+    {
+        var success = false;
+
+        foreach (var box in Boxes.Where(x => x.OccupiedBy == player))
+        {
+            foreach (var condition in WinConditions)
+            {
+                success = CheckDirections(box, player, condition.SpacesAway, condition.Direction);
+
+                if (success)
+                {
+                    EndGame(player);
+                    break;
+                }
+            }
+
+            if (success)
+            {
+                break;
+            }
+        }
+    }
+
+    private bool CheckDirections(BoardBox box, string player, int checkAmount, string checkDirection)
+    {
+        var success = false;
+
+        if (checkDirection == "subtract")
+        {
+            if (box.OccupiedBy != null)
+            {
+                if (box.OccupiedBy == player)
+                {
+                    var firstBoxAbove = Boxes.FirstOrDefault(x => x.Index == box.Index - checkAmount);
+
+                    if (firstBoxAbove != null)
+                    {
+                        if (firstBoxAbove.OccupiedBy == player)
+                        {
+                            var secondBoxAbove = Boxes.FirstOrDefault(x => x.Index == firstBoxAbove.Index - checkAmount);
+
+                            if (secondBoxAbove != null)
+                            {
+                                if (secondBoxAbove.OccupiedBy == player)
+                                {
+                                    var finalBoxAbove = Boxes.FirstOrDefault(x => x.Index == secondBoxAbove.Index - checkAmount);
+
+                                    if (finalBoxAbove != null)
+                                    {
+                                        if (finalBoxAbove.OccupiedBy == player)
+                                        {
+                                            success = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (box.OccupiedBy != null)
+            {
+                if (box.OccupiedBy == player)
+                {
+                    var firstBoxAbove = Boxes.FirstOrDefault(x => x.Index == box.Index + checkAmount);
+
+                    if (firstBoxAbove != null)
+                    {
+                        if (firstBoxAbove.OccupiedBy == player)
+                        {
+                            var secondBoxAbove = Boxes.FirstOrDefault(x => x.Index == firstBoxAbove.Index + checkAmount);
+
+                            if (secondBoxAbove != null)
+                            {
+                                if (secondBoxAbove.OccupiedBy == player)
+                                {
+                                    var finalBoxAbove = Boxes.FirstOrDefault(x => x.Index == secondBoxAbove.Index + checkAmount);
+
+                                    if (finalBoxAbove != null)
+                                    {
+                                        if (finalBoxAbove.OccupiedBy == player)
+                                        {
+                                            success = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return success;
+    }
+
+    private void EndGame(string player)
+    {
+        Winner = player;
+
+        if (player == User)
+        {
+            Wins++;
+        }
+        else
+        {
+            Losses++;
+        }
+
+        IsPlayerTurn = false;
+        StateHasChanged();
+    }
+
+    private void ResetBoard()
+    {
+        HeaderBoxes.Clear();
+        Boxes.Clear();
+
+        Winner = null;
+        PieceFalling = false;
+        IsPlayerTurn = true;
+
+        for (int i = 1; i < 8; i++)
+        {
+            HeaderBoxes.Add(new BoardBox { Index = i });
+        }
+
+        for (byte i = 1; i < 43; i++)
+        {
+            Boxes.Add(new BoardBox { Index = i });
+        }
+    }
+
+    private async Task FallAnimation(BoardBox box, string player)
+    {
+        var occupiedBy = player == User ? User : CPU;
+
+        box.OccupiedBy = occupiedBy;
+        StateHasChanged();
+        await Task.Delay(150);
+        box.OccupiedBy = null;
+        StateHasChanged();
+    }
+}

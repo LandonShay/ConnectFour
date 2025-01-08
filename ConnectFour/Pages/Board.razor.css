@@ -1,0 +1,38 @@
+﻿.board-container {
+    display: grid;
+    width: 300px;
+    gap: 0;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.header {
+    border: 5px solid black;
+    width: 100px;
+    cursor: pointer;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-content: center;
+}
+
+.box {
+    border: solid 1px black;
+    width: 100px;
+    cursor: pointer;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-content: center;
+}
+
+.game-piece{
+    border-radius: 100px;
+    height: 60px;
+    width: 60px;
+}
+
+.play-area{
+    pointer-events: none;
+}
