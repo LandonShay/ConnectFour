@@ -7,7 +7,6 @@ namespace ConnectFour.Pages
     {
         public List<BoardBox> Boxes = new List<BoardBox>();
         public List<BoardBox> HeaderBoxes = new List<BoardBox>();
-        public List<WinConditions> WinConditions = new List<WinConditions>();
 
         private const string User = "user";
         private const string CPU = "cpu";
@@ -25,18 +24,10 @@ namespace ConnectFour.Pages
 
         protected override void OnInitialized()
         {
-            WinConditions.Add(new WinConditions { SpacesAway = 1, Direction = addAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 6, Direction = addAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 7, Direction = addAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 8, Direction = addAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 1, Direction = subtractAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 6, Direction = subtractAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 7, Direction = subtractAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 8, Direction = subtractAction });
-
             ResetBoard();
         }
 
+        #region Game
         public async void PlayTurn(BoardBox headerBox)
         {
             if (!PieceFalling && IsPlayerTurn && Winner == null)
@@ -51,28 +42,13 @@ namespace ConnectFour.Pages
             }
         }
 
-        private async void ComputerTurn()
-        {
-            if (Winner == null)
-            {
-                IsPlayerTurn = false;
-
-                var chosenHeader = HeaderBoxes.Shuffle().First();
-
-                await PiecePlay(chosenHeader, CPU);
-                CheckWin(CPU);
-
-                IsPlayerTurn = true;
-            }
-        }
-
         private async Task PiecePlay(BoardBox headerBox, string player)
         {
             var finalPlayBox = new BoardBox();
             PieceFalling = true;
 
-            var firstRowPlayBox = Boxes.First(x => x.Index == headerBox.Index);
-            var secondRowPlayBox = Boxes.First(x => x.Index == firstRowPlayBox.Index + 7);
+            var firstRowPlayBox = Boxes.First(x => x.Coordinate.column == headerBox.Coordinate.column);
+            var secondRowPlayBox = Boxes.First(x => x.Coordinate.row == firstRowPlayBox.Coordinate.row + 1 && x.Coordinate.column == firstRowPlayBox.Coordinate.column);
 
             await FallAnimation(firstRowPlayBox, player);
 
@@ -88,7 +64,7 @@ namespace ConnectFour.Pages
                 {
                     await FallAnimation(box, player);
 
-                    var nextBox = Boxes.First(x => x.Index == box.Index + 7);
+                    var nextBox = Boxes.First(x => x.Coordinate.row == box.Coordinate.row + 1 && x.Coordinate.column == box.Coordinate.column);
 
                     if (nextBox.OccupiedBy != null)
                     {
@@ -112,59 +88,6 @@ namespace ConnectFour.Pages
             finalPlayBox.OccupiedBy = player;
             StateHasChanged();
             PieceFalling = false;
-        }
-
-        private void CheckWin(string player)
-        {
-            var success = false;
-
-            foreach (var box in Boxes.Where(x => x.OccupiedBy == player))
-            {
-                foreach (var condition in WinConditions)
-                {
-                    success = CheckDirections(box, player, condition.SpacesAway, condition.Direction);
-
-                    if (success)
-                    {
-                        EndGame(player);
-                        break;
-                    }
-                }
-
-                if (success)
-                {
-                    break;
-                }
-            }
-        }
-
-        private bool CheckDirections(BoardBox box, string player, int checkAmount, string checkDirection)
-        {
-            var success = false;
-            checkAmount = checkDirection == addAction ? checkAmount : checkAmount * -1;
-
-            if (box.OccupiedBy != null && box.OccupiedBy == player)
-            {
-                for (int i = 0; i < 3; i++)
-                {
-                    var directionBox = Boxes.FirstOrDefault(x => x.Index == box.Index + checkAmount);
-
-                    if (directionBox != null && directionBox.OccupiedBy == player && i < 2)
-                    {
-                        box = directionBox;
-                    }
-                    else if (i == 2 && directionBox != null && directionBox.OccupiedBy == player)
-                    {
-                        success = true;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-            }
-
-            return success;
         }
 
         private void EndGame(string player)
@@ -193,17 +116,85 @@ namespace ConnectFour.Pages
             PieceFalling = false;
             IsPlayerTurn = true;
 
+            var row = 1;
+            var column = 1;
+
             for (int i = 1; i < 8; i++)
             {
-                HeaderBoxes.Add(new BoardBox { Index = i });
+                HeaderBoxes.Add(new BoardBox { Coordinate = (0, i) });
             }
 
             for (byte i = 1; i < 43; i++)
             {
-                Boxes.Add(new BoardBox { Index = i });
+                Boxes.Add(new BoardBox { Coordinate = (row, column) });
+                column++;
+
+                if (i % 7 == 0)
+                {
+                    row++;
+                    column = 1;
+                }
+            }
+        }
+        #endregion
+
+        #region NPC Turn
+        private async void ComputerTurn()
+        {
+            if (Winner == null)
+            {
+                IsPlayerTurn = false;
+
+                var chosenHeader = HeaderBoxes.Shuffle().First();
+
+                await PiecePlay(chosenHeader, CPU);
+                CheckWin(CPU);
+
+                IsPlayerTurn = true;
+            }
+        }
+        #endregion
+
+        #region Check Conditions
+        private void CheckWin(string player)
+        {
+            var directions = new (int rowOffset, int colOffset)[]
+            {
+                (-1, 0), (1, 0), (0, -1), (0, 1),
+                (-1, -1), (-1, 1), (1, -1), (1, 1)
+            };
+
+            foreach (var box in Boxes.Where(x => x.OccupiedBy == player))
+            {
+                foreach (var direction in directions)
+                {
+                    if (CheckDirection(box.Coordinate.row, box.Coordinate.column, direction, player))
+                    {
+                        EndGame(player);
+                        return;
+                    }
+                }
             }
         }
 
+        private bool CheckDirection(int startRow, int startCol, (int rowOffset, int colOffset) direction, string player)
+        {
+            for (int i = 1; i <= 3; i++)
+            {
+                var newRow = startRow + direction.rowOffset * i;
+                var newCol = startCol + direction.colOffset * i;
+
+                if (!IsValidCoordinate(newRow, newCol) || Boxes.FirstOrDefault(b => b.Coordinate == (newRow, newCol))?.OccupiedBy != player)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        #endregion
+
+        #region Misc
         private async Task FallAnimation(BoardBox box, string player)
         {
             var occupiedBy = player == User ? User : CPU;
@@ -214,5 +205,11 @@ namespace ConnectFour.Pages
             box.OccupiedBy = null;
             StateHasChanged();
         }
+
+        private bool IsValidCoordinate(int row, int col)
+        {
+            return row > 0 && row < 7 && col > 0 && col < 8;
+        }
+        #endregion
     }
 }
