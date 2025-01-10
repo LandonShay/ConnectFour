@@ -2,9 +2,7 @@
 {
     public class BoardBox
     {
-        public int Index { get; set; }
+        public (int row, int column) Coordinate { get; set; }
         public string? OccupiedBy { get; set; }
-
-        //public int Coordinate { get; set; }
     }
 }

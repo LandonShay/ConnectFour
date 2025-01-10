@@ -7,7 +7,6 @@ namespace ConnectFour.Pages
     {
         public List<BoardBox> Boxes = new List<BoardBox>();
         public List<BoardBox> HeaderBoxes = new List<BoardBox>();
-        public List<WinConditions> WinConditions = new List<WinConditions>();
 
         private const string User = "user";
         private const string CPU = "cpu";
@@ -25,15 +24,6 @@ namespace ConnectFour.Pages
 
         protected override void OnInitialized()
         {
-            WinConditions.Add(new WinConditions { SpacesAway = 1, Direction = addAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 6, Direction = addAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 7, Direction = addAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 8, Direction = addAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 1, Direction = subtractAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 6, Direction = subtractAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 7, Direction = subtractAction });
-            WinConditions.Add(new WinConditions { SpacesAway = 8, Direction = subtractAction });
-
             ResetBoard();
         }
 
@@ -71,8 +61,8 @@ namespace ConnectFour.Pages
             var finalPlayBox = new BoardBox();
             PieceFalling = true;
 
-            var firstRowPlayBox = Boxes.First(x => x.Index == headerBox.Index);
-            var secondRowPlayBox = Boxes.First(x => x.Index == firstRowPlayBox.Index + 7);
+            var firstRowPlayBox = Boxes.First(x => x.Coordinate.column == headerBox.Coordinate.column);
+            var secondRowPlayBox = Boxes.First(x => x.Coordinate.row == firstRowPlayBox.Coordinate.row + 1 && x.Coordinate.column == firstRowPlayBox.Coordinate.column);
 
             await FallAnimation(firstRowPlayBox, player);
 
@@ -88,7 +78,7 @@ namespace ConnectFour.Pages
                 {
                     await FallAnimation(box, player);
 
-                    var nextBox = Boxes.First(x => x.Index == box.Index + 7);
+                    var nextBox = Boxes.First(x => x.Coordinate.row == box.Coordinate.row + 1 && x.Coordinate.column == box.Coordinate.column);
 
                     if (nextBox.OccupiedBy != null)
                     {
@@ -116,55 +106,50 @@ namespace ConnectFour.Pages
 
         private void CheckWin(string player)
         {
-            var success = false;
+            var directions = new (int rowOffset, int colOffset)[]
+            {
+                (-1, 0),  // Up
+                (1, 0),   // Down
+                (0, -1),  // Left
+                (0, 1),   // Right
+                (-1, -1), // Up-Left
+                (-1, 1),  // Up-Right
+                (1, -1),  // Down-Left
+                (1, 1)    // Down-Right
+            };
 
             foreach (var box in Boxes.Where(x => x.OccupiedBy == player))
             {
-                foreach (var condition in WinConditions)
+                foreach (var direction in directions)
                 {
-                    success = CheckDirections(box, player, condition.SpacesAway, condition.Direction);
-
-                    if (success)
+                    if (CheckDirection(box.Coordinate.row, box.Coordinate.column, direction, player))
                     {
                         EndGame(player);
-                        break;
+                        return; 
                     }
-                }
-
-                if (success)
-                {
-                    break;
                 }
             }
         }
 
-        private bool CheckDirections(BoardBox box, string player, int checkAmount, string checkDirection)
+        private bool CheckDirection(int startRow, int startCol, (int rowOffset, int colOffset) direction, string player)
         {
-            var success = false;
-            checkAmount = checkDirection == addAction ? checkAmount : checkAmount * -1;
-
-            if (box.OccupiedBy != null && box.OccupiedBy == player)
+            for (int i = 1; i <= 3; i++)
             {
-                for (int i = 0; i < 3; i++)
-                {
-                    var directionBox = Boxes.FirstOrDefault(x => x.Index == box.Index + checkAmount);
+                var newRow = startRow + direction.rowOffset * i;
+                var newCol = startCol + direction.colOffset * i;
 
-                    if (directionBox != null && directionBox.OccupiedBy == player && i < 2)
-                    {
-                        box = directionBox;
-                    }
-                    else if (i == 2 && directionBox != null && directionBox.OccupiedBy == player)
-                    {
-                        success = true;
-                    }
-                    else
-                    {
-                        break;
-                    }
+                if (!IsValidCoordinate(newRow, newCol) || Boxes.FirstOrDefault(b => b.Coordinate == (newRow, newCol))?.OccupiedBy != player)
+                {
+                    return false;
                 }
             }
 
-            return success;
+            return true;
+        }
+
+        private bool IsValidCoordinate(int row, int col)
+        {
+            return row > 0 && row < 7 && col > 0 && col < 8;
         }
 
         private void EndGame(string player)
@@ -193,14 +178,24 @@ namespace ConnectFour.Pages
             PieceFalling = false;
             IsPlayerTurn = true;
 
+            var row = 1;
+            var column = 1;
+
             for (int i = 1; i < 8; i++)
             {
-                HeaderBoxes.Add(new BoardBox { Index = i });
+                HeaderBoxes.Add(new BoardBox { Coordinate = (0, i) });
             }
 
             for (byte i = 1; i < 43; i++)
             {
-                Boxes.Add(new BoardBox { Index = i });
+                Boxes.Add(new BoardBox { Coordinate = (row, column) });
+                column++;
+
+                if (i % 7 == 0)
+                {
+                    row++;
+                    column = 1;
+                }
             }
         }
 
