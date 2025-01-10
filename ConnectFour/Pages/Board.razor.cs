@@ -27,6 +27,7 @@ namespace ConnectFour.Pages
             ResetBoard();
         }
 
+        #region Game
         public async void PlayTurn(BoardBox headerBox)
         {
             if (!PieceFalling && IsPlayerTurn && Winner == null)
@@ -38,21 +39,6 @@ namespace ConnectFour.Pages
                 {
                     ComputerTurn();
                 }
-            }
-        }
-
-        private async void ComputerTurn()
-        {
-            if (Winner == null)
-            {
-                IsPlayerTurn = false;
-
-                var chosenHeader = HeaderBoxes.Shuffle().First();
-
-                await PiecePlay(chosenHeader, CPU);
-                CheckWin(CPU);
-
-                IsPlayerTurn = true;
             }
         }
 
@@ -104,54 +90,6 @@ namespace ConnectFour.Pages
             PieceFalling = false;
         }
 
-        private void CheckWin(string player)
-        {
-            var directions = new (int rowOffset, int colOffset)[]
-            {
-                (-1, 0),  // Up
-                (1, 0),   // Down
-                (0, -1),  // Left
-                (0, 1),   // Right
-                (-1, -1), // Up-Left
-                (-1, 1),  // Up-Right
-                (1, -1),  // Down-Left
-                (1, 1)    // Down-Right
-            };
-
-            foreach (var box in Boxes.Where(x => x.OccupiedBy == player))
-            {
-                foreach (var direction in directions)
-                {
-                    if (CheckDirection(box.Coordinate.row, box.Coordinate.column, direction, player))
-                    {
-                        EndGame(player);
-                        return; 
-                    }
-                }
-            }
-        }
-
-        private bool CheckDirection(int startRow, int startCol, (int rowOffset, int colOffset) direction, string player)
-        {
-            for (int i = 1; i <= 3; i++)
-            {
-                var newRow = startRow + direction.rowOffset * i;
-                var newCol = startCol + direction.colOffset * i;
-
-                if (!IsValidCoordinate(newRow, newCol) || Boxes.FirstOrDefault(b => b.Coordinate == (newRow, newCol))?.OccupiedBy != player)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        private bool IsValidCoordinate(int row, int col)
-        {
-            return row > 0 && row < 7 && col > 0 && col < 8;
-        }
-
         private void EndGame(string player)
         {
             Winner = player;
@@ -198,7 +136,65 @@ namespace ConnectFour.Pages
                 }
             }
         }
+        #endregion
 
+        #region NPC Turn
+        private async void ComputerTurn()
+        {
+            if (Winner == null)
+            {
+                IsPlayerTurn = false;
+
+                var chosenHeader = HeaderBoxes.Shuffle().First();
+
+                await PiecePlay(chosenHeader, CPU);
+                CheckWin(CPU);
+
+                IsPlayerTurn = true;
+            }
+        }
+        #endregion
+
+        #region Check Conditions
+        private void CheckWin(string player)
+        {
+            var directions = new (int rowOffset, int colOffset)[]
+            {
+                (-1, 0), (1, 0), (0, -1), (0, 1),
+                (-1, -1), (-1, 1), (1, -1), (1, 1)
+            };
+
+            foreach (var box in Boxes.Where(x => x.OccupiedBy == player))
+            {
+                foreach (var direction in directions)
+                {
+                    if (CheckDirection(box.Coordinate.row, box.Coordinate.column, direction, player))
+                    {
+                        EndGame(player);
+                        return;
+                    }
+                }
+            }
+        }
+
+        private bool CheckDirection(int startRow, int startCol, (int rowOffset, int colOffset) direction, string player)
+        {
+            for (int i = 1; i <= 3; i++)
+            {
+                var newRow = startRow + direction.rowOffset * i;
+                var newCol = startCol + direction.colOffset * i;
+
+                if (!IsValidCoordinate(newRow, newCol) || Boxes.FirstOrDefault(b => b.Coordinate == (newRow, newCol))?.OccupiedBy != player)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        #endregion
+
+        #region Misc
         private async Task FallAnimation(BoardBox box, string player)
         {
             var occupiedBy = player == User ? User : CPU;
@@ -209,5 +205,11 @@ namespace ConnectFour.Pages
             box.OccupiedBy = null;
             StateHasChanged();
         }
+
+        private bool IsValidCoordinate(int row, int col)
+        {
+            return row > 0 && row < 7 && col > 0 && col < 8;
+        }
+        #endregion
     }
 }
