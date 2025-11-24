@@ -1,0 +1,87 @@
+﻿
+.game-map {
+    display: grid;
+    grid-template-columns: repeat(7, 50px);
+    position: relative;
+    margin-bottom: 40px; /* create space */
+}
+
+.grid-box {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: lightgray;
+}
+
+/*.input-box {
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    border: solid 1px black;
+}*/
+
+/*.inputs {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.bottom-inputs {
+    display: flex;
+}*/
+
+.pacman {
+    border-radius: 25px;
+    height: 25px;
+    width: 25px;
+    background-color: yellow;
+}
+
+.pellet {
+    background-color: yellow;
+    height: 5px;
+    width: 5px;
+}
+
+.top-left-blocker {
+    border-top: solid 1px black;
+    border-left: solid 1px black;
+}
+
+.top-right-blocker {
+    border-top: solid 1px black;
+    border-right: solid 1px black;
+}
+
+.bottom-left-blocker {
+    border-bottom: solid 1px black;
+    border-left: solid 1px black;
+}
+
+.bottom-right-blocker {
+    border-bottom: solid 1px black;
+    border-right: solid 1px black;
+}
+
+.top-blocker {
+    border-top: solid 1px black;
+}
+
+.full-blocker {
+    background-color: black;
+}
+
+.left-blocker {
+    border-left: solid 1px black;
+}
+
+.right-blocker {
+    border-right: solid 1px black;
+}
+
+.bottom-blocker {
+    border-bottom: solid 1px black;
+}

@@ -1,0 +1,31 @@
+﻿namespace ConnectFour.Data
+{
+    public class PacGridBox
+    {
+        public Blockers Blocker { get; set; } = Blockers.None;
+        public BoxItem Item { get; set; } = BoxItem.None;
+        public (int, int) Coordinates { get; set; }
+
+        public enum BoxItem
+        {
+            None,
+            Pellet,
+            Enemy,
+            Pacman
+        }
+
+        public enum Blockers
+        {
+            None,
+            TopLeftCorner,
+            TopRightCorner,
+            BottomLeftCorner,
+            BottomRightCorner,
+            Top,
+            Left,
+            Right,
+            Bottom,
+            Full,
+        }
+    }
+}

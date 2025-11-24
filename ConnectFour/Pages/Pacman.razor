@@ -1,0 +1,34 @@
+﻿@page "/pac"
+@using ConnectFour.Data
+
+<div class="game-map" @onkeydown="ChangeDirection" tabindex="0">
+    @foreach (var box in GridBoxes)
+    {
+        <div class="grid-box @(GetBlockerCss(box.Blocker))">
+            @if (box.Item == PacGridBox.BoxItem.Pellet)
+            {
+                <div class="pellet"></div>
+            }
+            else if (box.Item == PacGridBox.BoxItem.Pacman)
+            {
+                <div class="pacman"></div>
+            }
+        </div>
+    }
+    @if (Status == GameStatus.Win)
+    {
+        <span>You win!</span>
+        <button @onclick="ResetMap">Play Again</button>
+    }
+</div>
+
+@* <div class="inputs">
+    <div>
+        <div class="input-box" @onclick="() => ChangeMove(Move.Up)"></div>
+    </div>
+    <div class="bottom-inputs">
+        <div class="input-box" @onclick="() => ChangeMove(Move.Left)"></div>
+        <div class="input-box" @onclick="() => ChangeMove(Move.Down)"></div>
+        <div class="input-box" @onclick="() => ChangeMove(Move.Right)"></div>
+    </div>
+</div> *@
