@@ -23,34 +23,24 @@ namespace ConnectFour.Pages
             GridBoxes.Clear();
             Status = GameStatus.None;
 
-            // 1st row
-            GridBoxes.Add(new PacGridBox { Coordinates = (0, 0), Item = BoxItem.Pellet, Blocker = Blockers.TopLeftCorner });
-            GridBoxes.Add(new PacGridBox { Coordinates = (0, 1), Item = BoxItem.Pellet, Blocker = Blockers.Top });
-            GridBoxes.Add(new PacGridBox { Coordinates = (0, 2), Item = BoxItem.Pellet, Blocker = Blockers.Top });
-            GridBoxes.Add(new PacGridBox { Coordinates = (0, 3), Item = BoxItem.Pellet, Blocker = Blockers.Top });
-            GridBoxes.Add(new PacGridBox { Coordinates = (0, 4), Item = BoxItem.Pellet, Blocker = Blockers.Top });
-            GridBoxes.Add(new PacGridBox { Coordinates = (0, 5), Item = BoxItem.Pellet, Blocker = Blockers.Top });
-            GridBoxes.Add(new PacGridBox { Coordinates = (0, 6), Item = BoxItem.Pellet, Blocker = Blockers.TopRightCorner });
+            var x = 0;
+            var y = 0;
 
-            // 2nd row
-            GridBoxes.Add(new PacGridBox { Coordinates = (1, 0), Item = BoxItem.Pellet, Blocker = Blockers.Left });
-            GridBoxes.Add(new PacGridBox { Coordinates = (1, 1), Blocker = Blockers.Full });
-            GridBoxes.Add(new PacGridBox { Coordinates = (1, 2), Blocker = Blockers.Full });
-            GridBoxes.Add(new PacGridBox { Coordinates = (1, 3), Blocker = Blockers.Full });
-            GridBoxes.Add(new PacGridBox { Coordinates = (1, 4), Blocker = Blockers.Full });
-            GridBoxes.Add(new PacGridBox { Coordinates = (1, 5), Blocker = Blockers.Full });
-            GridBoxes.Add(new PacGridBox { Coordinates = (1, 6), Item = BoxItem.Pellet, Blocker = Blockers.Right });
+            foreach (var gridItem in PacMap.Grid)
+            {
+                gridItem.Coordinates = (x, y);
+                y++;
 
-            // 3rd row
-            GridBoxes.Add(new PacGridBox { Coordinates = (2, 0), Item = BoxItem.Pacman, Blocker = Blockers.BottomLeftCorner });
-            GridBoxes.Add(new PacGridBox { Coordinates = (2, 1), Item = BoxItem.Pellet, Blocker = Blockers.Bottom });
-            GridBoxes.Add(new PacGridBox { Coordinates = (2, 2), Item = BoxItem.Pellet, Blocker = Blockers.Bottom });
-            GridBoxes.Add(new PacGridBox { Coordinates = (2, 3), Item = BoxItem.Pellet, Blocker = Blockers.Bottom });
-            GridBoxes.Add(new PacGridBox { Coordinates = (2, 4), Item = BoxItem.Pellet, Blocker = Blockers.Bottom });
-            GridBoxes.Add(new PacGridBox { Coordinates = (2, 5), Item = BoxItem.Pellet, Blocker = Blockers.Bottom });
-            GridBoxes.Add(new PacGridBox { Coordinates = (2, 6), Item = BoxItem.Pellet, Blocker = Blockers.BottomRightCorner });
+                if (y == 15)
+                {
+                    x++;
+                    y = 0;
+                }
 
-            CurrentPlayerBox = GridBoxes.First(x => x.Item == BoxItem.Pacman);
+                GridBoxes.Add(gridItem);
+            }
+
+            //CurrentPlayerBox = GridBoxes.First(x => x.Item == BoxItem.Pacman);
 
             _ = MovePacman();
         }

@@ -1,7 +1,7 @@
 ﻿
 .game-map {
     display: grid;
-    grid-template-columns: repeat(7, 50px);
+    grid-template-columns: repeat(15, 50px);
     position: relative;
     margin-bottom: 40px; /* create space */
 }
