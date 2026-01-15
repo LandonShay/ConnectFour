@@ -9,9 +9,14 @@
             {
                 <div class="pellet"></div>
             }
-            else if (box.Item == PacGridBox.BoxItem.Pacman)
+            else if (box.Item == PacGridBox.BoxItem.PowerPellet)
             {
-                <div class="pacman"></div>
+                <div class="power-pellet"></div>
+            }
+
+            @if (box.Entities.Count > 0)
+            {
+                <div class="@GetCreatureCss(box.Entities) @GetPacmanCss(box.Entities)"></div>
             }
         </div>
     }

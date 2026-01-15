@@ -4,14 +4,23 @@
     {
         public Blockers Blocker { get; set; } = Blockers.None;
         public BoxItem Item { get; set; } = BoxItem.None;
+        public List<Creatures> Entities { get; set; } = new();
         public (int, int) Coordinates { get; set; }
 
         public enum BoxItem
         {
             None,
             Pellet,
-            Enemy,
-            Pacman
+            PowerPellet
+        }
+
+        public enum Creatures
+        {
+            Pacman,
+            RedGhost,
+            OrangeGhost,
+            BlueGhost,
+            PinkGhost
         }
 
         public enum Blockers

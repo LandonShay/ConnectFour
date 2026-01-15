@@ -12,6 +12,8 @@ namespace ConnectFour.Pages
         private List<PacGridBox> GridBoxes = new();
         private PacGridBox? CurrentPlayerBox;
 
+        private int Score;
+
         protected override void OnInitialized()
         {
             base.OnInitialized();
@@ -102,9 +104,20 @@ namespace ConnectFour.Pages
 
                 if (targetBox != null && targetBox.Blocker != Blockers.Full)
                 {
-                    CurrentPlayerBox.Item = BoxItem.None;
                     CurrentPlayerBox = targetBox;
-                    CurrentPlayerBox.Item = BoxItem.Pacman;
+                    CurrentPlayerBox.Entities.Add(Creatures.Pacman);
+
+                    if (CurrentPlayerBox.Item == BoxItem.Pellet)
+                    {
+                        Score += 200;
+                    }
+                    else if (CurrentPlayerBox.Item == BoxItem.PowerPellet)
+                    {
+                        Score += 500;
+                        // ghosts run, player can eat ghosts for x seconds
+                    }
+
+                    CurrentPlayerBox.Item = BoxItem.None;
                 }
             }
         }
@@ -137,6 +150,38 @@ namespace ConnectFour.Pages
             {
                 Status = GameStatus.Win;
             }
+        }
+
+        private string GetCreatureCss(List<Creatures> creatures)
+        {
+            if (creatures.Contains(Creatures.RedGhost))
+            {
+                return "ghost red-ghost";
+            }
+            else if (creatures.Contains(Creatures.BlueGhost))
+            {
+                return "ghost blue-ghost";
+            }
+            else if (creatures.Contains(Creatures.PinkGhost))
+            {
+                return "ghost pink-ghost";
+            }
+            else if (creatures.Contains(Creatures.OrangeGhost))
+            {
+                return "ghost orange-ghost";
+            }
+
+            return string.Empty;
+        }
+
+        private string GetPacmanCss(List<Creatures> creatures)
+        {
+            if (creatures.Contains(Creatures.Pacman))
+            {
+                return "pacman";
+            }
+
+            return string.Empty;
         }
 
         private string GetBlockerCss(Blockers blocker)
