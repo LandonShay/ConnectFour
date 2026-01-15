@@ -4,8 +4,9 @@
     {
         public Blockers Blocker { get; set; } = Blockers.None;
         public BoxItem Item { get; set; } = BoxItem.None;
-        public List<Creatures> Entities { get; set; } = new();
+        public List<PacEntity> Entities { get; set; } = new();
         public (int x, int y) Coordinates { get; set; }
+        public bool IsEntrance { get; set; }
 
         public enum BoxItem
         {

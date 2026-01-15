@@ -21,9 +21,16 @@
         </div>
     }
     <span>Score: @Score</span>
-    @if (Status == GameStatus.Win)
+    @if (Status != GameStatus.None)
     {
-        <span>You win!</span>
+        if (Status == GameStatus.Win)
+        {
+            <span>You win!</span>
+        }
+        else
+        {
+            <span>You lose!</span>
+        }
         <button @onclick="ResetMap">Play Again</button>
     }
 </div>

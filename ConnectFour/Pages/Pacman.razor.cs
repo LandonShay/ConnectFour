@@ -20,6 +20,11 @@ namespace ConnectFour.Pages
         private bool IsPoweredUp { get; set; }
         private float poweredUpElasped { get; set; }
 
+        private bool OrangeCanMove { get; set; }
+        private bool BlueCanMove { get; set; }
+        private bool PinkCanMove { get; set; }
+        private bool RedCanMove { get; set; }
+
         protected override void OnInitialized()
         {
             base.OnInitialized();
@@ -48,7 +53,9 @@ namespace ConnectFour.Pages
                 GridBoxes.Add(gridItem);
             }
 
-            CurrentPlayerBox = GridBoxes.First(x => x.Entities.Contains(Creatures.Pacman));
+            CurrentPlayerBox = GridBoxes.First(x => x.Entities.Any(y => y.Creature == Creatures.Pacman));
+
+            GhostCountdown();
             _ = Tick();
         }
 
@@ -58,10 +65,8 @@ namespace ConnectFour.Pages
             {
                 HandlePoweredUp();
 
-                // initiate a countdown to trigger ghosts exiting start zone and beginning movement here
-
-                MovePacman();
                 // move ghosts here
+                MovePacman();
 
                 CheckWin();
                 StateHasChanged();
@@ -119,9 +124,11 @@ namespace ConnectFour.Pages
 
                 if (targetBox != null && targetBox.Blocker != Blockers.Full)
                 {
-                    CurrentPlayerBox.Entities.Remove(Creatures.Pacman);
+                    var pac = CurrentPlayerBox.Entities.First(x => x.Creature == Creatures.Pacman);
+
+                    CurrentPlayerBox.Entities.Remove(pac);
                     CurrentPlayerBox = targetBox;
-                    CurrentPlayerBox.Entities.Add(Creatures.Pacman);
+                    CurrentPlayerBox.Entities.Add(pac);
 
                     if (CurrentPlayerBox.Item == BoxItem.Pellet)
                     {
@@ -160,6 +167,37 @@ namespace ConnectFour.Pages
         }
         #endregion
 
+        #region Ghosts
+        private void GhostCountdown()
+        {
+            var reference = new Dictionary<Creatures, float>()
+            {
+                { Creatures.OrangeGhost, 3 },
+                { Creatures.BlueGhost, 6 },
+                { Creatures.PinkGhost, 9 },
+                { Creatures.RedGhost, 12 },
+            };
+
+            foreach (var item in reference)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay((int)(item.Value * 1000));
+
+                    var ghostBox = GridBoxes.First(x => x.Entities.Any(x => x.Creature == item.Key));
+                    var entrance = GridBoxes.First(x => x.IsEntrance);
+
+                    var ghost = ghostBox.Entities.First();
+                    ghost.CanMove = true;
+
+                    ghostBox.Entities.Remove(ghost);
+                    entrance.Entities.Add(ghost);
+
+                });
+            }
+        }
+        #endregion
+
         private void HandlePoweredUp()
         {
             if (IsPoweredUp)
@@ -184,7 +222,7 @@ namespace ConnectFour.Pages
                 return;
             }
 
-            if (!IsPoweredUp && GridBoxes.Any(x => x.Entities.Count > 1 && x.Entities.Contains(Creatures.Pacman)))
+            if (!IsPoweredUp && GridBoxes.Any(x => x.Entities.Count > 1 && x.Entities.Any(x => x.Creature == Creatures.Pacman)))
             { // if pacman and a ghost are in the same box
                 Status = GameStatus.Lose;
                 return;
@@ -192,21 +230,21 @@ namespace ConnectFour.Pages
         }
 
         #region CSS
-        private string GetCreatureCss(List<Creatures> creatures)
+        private string GetCreatureCss(List<PacEntity> entities)
         {
-            if (creatures.Contains(Creatures.RedGhost))
+            if (entities.Any(x => x.Creature == Creatures.RedGhost))
             {
                 return "ghost red-ghost";
             }
-            else if (creatures.Contains(Creatures.BlueGhost))
-            {
-                return "ghost blue-ghost";
-            }
-            else if (creatures.Contains(Creatures.PinkGhost))
+            else if (entities.Any(x => x.Creature == Creatures.PinkGhost))
             {
                 return "ghost pink-ghost";
             }
-            else if (creatures.Contains(Creatures.OrangeGhost))
+            else if (entities.Any(x => x.Creature == Creatures.BlueGhost))
+            {
+                return "ghost blue-ghost";
+            }
+            else if (entities.Any(x => x.Creature == Creatures.OrangeGhost))
             {
                 return "ghost orange-ghost";
             }
@@ -214,9 +252,9 @@ namespace ConnectFour.Pages
             return string.Empty;
         }
 
-        private string GetPacmanCss(List<Creatures> creatures)
+        private string GetPacmanCss(List<PacEntity> entities)
         {
-            if (creatures.Contains(Creatures.Pacman))
+            if (entities.Any(x => x.Creature == Creatures.Pacman))
             {
                 if (IsPoweredUp)
                 {
