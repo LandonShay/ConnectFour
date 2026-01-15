@@ -1,6 +1,6 @@
-﻿using static ConnectFour.Data.PacGridBox;
+﻿using static ConnectFour.Data.Pacman.PacGridBox;
 
-namespace ConnectFour.Data
+namespace ConnectFour.Data.Pacman
 {
     public static class PacMap
     {
@@ -52,7 +52,7 @@ namespace ConnectFour.Data
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { Item = BoxItem.Pellet },
-            new PacGridBox { Item = BoxItem.Pellet, Entities = [new PacEntity { Creature = Creatures.Pacman, CanMove = true }] },
+            new PacGridBox { Item = BoxItem.Pellet, Entities = [new PacEntity { Creature = Creatures.Pacman }] },
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { Item = BoxItem.Pellet },
@@ -168,9 +168,9 @@ namespace ConnectFour.Data
             new PacGridBox { Blocker = Blockers.Full },
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { Blocker = Blockers.Full },
-            new PacGridBox { Entities = [new PacEntity{ Creature = Creatures.BlueGhost }] },
+            new PacGridBox { Entities = [new PacEntity{ Creature = Creatures.BlueGhost, Ghost = new BlueGhost() }] },
             new PacGridBox { },
-            new PacGridBox { Entities = [new PacEntity{ Creature = Creatures.OrangeGhost }]},
+            new PacGridBox { Entities = [new PacEntity{ Creature = Creatures.OrangeGhost, Ghost = new OrangeGhost() }]},
             new PacGridBox { Blocker = Blockers.Full },
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { Blocker = Blockers.Full },
@@ -187,9 +187,9 @@ namespace ConnectFour.Data
             new PacGridBox { Blocker = Blockers.Full },
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { Blocker = Blockers.Full },
-            new PacGridBox { Blocker = Blockers.Bottom, Entities = [new PacEntity{ Creature = Creatures.PinkGhost }] },
+            new PacGridBox { Blocker = Blockers.Bottom, Entities = [new PacEntity{ Creature = Creatures.PinkGhost, Ghost = new PinkGhost() }] },
             new PacGridBox { Blocker = Blockers.Bottom },
-            new PacGridBox { Blocker = Blockers.Bottom, Entities = [new PacEntity{ Creature = Creatures.RedGhost }] }, // on next row, use top instead of htis
+            new PacGridBox { Blocker = Blockers.Bottom, Entities = [new PacEntity{ Creature = Creatures.RedGhost , Ghost = new RedGhost() }] }, // on next row, use top instead of htis
             new PacGridBox { Blocker = Blockers.Full },
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { Blocker = Blockers.Full },

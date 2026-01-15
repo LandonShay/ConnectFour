@@ -1,4 +1,4 @@
-﻿namespace ConnectFour.Data
+﻿namespace ConnectFour.Data.Pacman
 {
     public class PacGridBox
     {

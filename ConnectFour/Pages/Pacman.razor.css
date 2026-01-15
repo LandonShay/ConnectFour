@@ -29,11 +29,12 @@
     animation: pacmanFlash 1s infinite;
 }
 
-.ghost{
+.ghost {
     height: 22px;
     width: 22px;
     border-radius: 10px 10px 0 0;
     z-index: 2;
+    position: absolute;
 }
 
 .red-ghost {

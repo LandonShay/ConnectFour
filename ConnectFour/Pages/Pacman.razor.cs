@@ -1,6 +1,6 @@
-﻿using ConnectFour.Data;
+﻿using ConnectFour.Data.Pacman;
 using Microsoft.AspNetCore.Components.Web;
-using static ConnectFour.Data.PacGridBox;
+using static ConnectFour.Data.Pacman.PacGridBox;
 
 namespace ConnectFour.Pages
 {
@@ -10,7 +10,7 @@ namespace ConnectFour.Pages
         private readonly float _poweredUpDuration = 5f;
 
         private GameStatus Status = GameStatus.None;
-        private Move MoveDirection = Move.None;
+        private MoveDir MoveDirection = MoveDir.None;
 
         private List<PacGridBox> GridBoxes = new();
         private PacGridBox? CurrentPlayerBox;
@@ -20,14 +20,13 @@ namespace ConnectFour.Pages
         private bool IsPoweredUp { get; set; }
         private float poweredUpElasped { get; set; }
 
-        private bool OrangeCanMove { get; set; }
-        private bool BlueCanMove { get; set; }
-        private bool PinkCanMove { get; set; }
-        private bool RedCanMove { get; set; }
+        private PacEntity OrangeGhost { get; set; } = new();
+        private PacEntity BlueGhost { get; set; } = new();
+        private PacEntity PinkGhost { get; set; } = new();
+        private PacEntity RedGhost { get; set; } = new();
 
         protected override void OnInitialized()
         {
-            base.OnInitialized();
             ResetMap();
         }
 
@@ -65,7 +64,7 @@ namespace ConnectFour.Pages
             {
                 HandlePoweredUp();
 
-                // move ghosts here
+                MoveGhosts();
                 MovePacman();
 
                 CheckWin();
@@ -83,22 +82,22 @@ namespace ConnectFour.Pages
         #region Move
         private void MovePacman()
         {
-            if (MoveDirection == Move.Up)
+            if (MoveDirection == MoveDir.Up)
             {
                 var stopBlockers = new List<Blockers>() { Blockers.Top, Blockers.TopLeftCorner, Blockers.TopRightCorner };
                 TryMoveBox(stopBlockers, -1, false);
             }
-            else if (MoveDirection == Move.Down)
+            else if (MoveDirection == MoveDir.Down)
             {
                 var stopBlockers = new List<Blockers>() { Blockers.Bottom, Blockers.BottomLeftCorner, Blockers.BottomRightCorner };
                 TryMoveBox(stopBlockers, 1, false);
             }
-            else if (MoveDirection == Move.Right)
+            else if (MoveDirection == MoveDir.Right)
             {
                 var stopBlockers = new List<Blockers>() { Blockers.Right, Blockers.TopRightCorner, Blockers.BottomRightCorner };
                 TryMoveBox(stopBlockers, 1, true);
             }
-            else if (MoveDirection == Move.Left)
+            else if (MoveDirection == MoveDir.Left)
             {
                 var stopBlockers = new List<Blockers>() { Blockers.Left, Blockers.TopLeftCorner, Blockers.BottomLeftCorner };
                 TryMoveBox(stopBlockers, -1, true);
@@ -152,16 +151,16 @@ namespace ConnectFour.Pages
             switch (key)
             {
                 case "w":
-                    MoveDirection = Move.Up;
+                    MoveDirection = MoveDir.Up;
                     break;
                 case "a":
-                    MoveDirection = Move.Left;
+                    MoveDirection = MoveDir.Left;
                     break;
                 case "s":
-                    MoveDirection = Move.Down;
+                    MoveDirection = MoveDir.Down;
                     break;
                 case "d":
-                    MoveDirection = Move.Right;
+                    MoveDirection = MoveDir.Right;
                     break;
             }
         }
@@ -188,13 +187,29 @@ namespace ConnectFour.Pages
                     var entrance = GridBoxes.First(x => x.IsEntrance);
 
                     var ghost = ghostBox.Entities.First();
-                    ghost.CanMove = true;
+                    ghost.Ghost.InSpawn = false;
 
                     ghostBox.Entities.Remove(ghost);
                     entrance.Entities.Add(ghost);
 
+                    if (ghost.Creature == Creatures.OrangeGhost)
+                    {
+                        OrangeGhost = ghost;
+                        OrangeGhost.Ghost.Entity = OrangeGhost;
+                        OrangeGhost.Ghost.CurrentBox = entrance;
+                    }
                 });
             }
+        }
+
+        private void MoveGhosts()
+        {
+            OrangeGhost.Ghost?.Move(GridBoxes);
+            BlueGhost.Ghost?.Move(GridBoxes);
+            PinkGhost.Ghost?.Move(GridBoxes);
+            RedGhost.Ghost?.Move(GridBoxes);
+
+            StateHasChanged();
         }
         #endregion
 
@@ -285,7 +300,7 @@ namespace ConnectFour.Pages
         }
         #endregion
 
-        private enum Move
+        public enum MoveDir
         {
             None,
             Up,

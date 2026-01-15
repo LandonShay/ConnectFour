@@ -1,15 +1,16 @@
 ﻿@page "/pac"
 @using ConnectFour.Data
+@using static ConnectFour.Data.Pacman.PacGridBox
 
 <div class="game-map" @onkeydown="ChangeDirection" tabindex="0">
     @foreach (var box in GridBoxes)
     {
         <div class="grid-box @(GetBlockerCss(box.Blocker))">
-            @if (box.Item == PacGridBox.BoxItem.Pellet)
+            @if (box.Item == BoxItem.Pellet)
             {
                 <div class="pellet"></div>
             }
-            else if (box.Item == PacGridBox.BoxItem.PowerPellet)
+            else if (box.Item == BoxItem.PowerPellet)
             {
                 <div class="power-pellet"></div>
             }
