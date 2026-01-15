@@ -52,7 +52,7 @@ namespace ConnectFour.Data
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { Item = BoxItem.Pellet },
-            new PacGridBox { Item = BoxItem.Pellet },
+            new PacGridBox { Item = BoxItem.Pellet, Entities = new() { Creatures.Pacman } },
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { Item = BoxItem.Pellet },

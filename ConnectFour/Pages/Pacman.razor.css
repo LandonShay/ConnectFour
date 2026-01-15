@@ -13,6 +13,7 @@
     align-items: center;
     justify-content: center;
     background-color: lightgray;
+    position: relative;
 }
 
 .pacman {
@@ -21,6 +22,11 @@
     width: 20px;
     background-color: yellow;
     z-index: 1;
+    position: absolute;
+}
+
+.powered-up {
+    animation: pacmanFlash 1s infinite;
 }
 
 .ghost{
@@ -58,10 +64,10 @@
     height: 10px;
     width: 10px;
     border-radius: 10px;
-    animation: flash 1s infinite;
+    animation: pelletFlash 1s infinite;
 }
 
-@keyframes flash {
+@keyframes pelletFlash {
     0% {
         background-color: white;
     }
@@ -70,6 +76,20 @@
     }
     100% {
         background-color: white;
+    }
+}
+
+@keyframes pacmanFlash {
+    0% {
+        background-color: yellow;
+    }
+
+    50% {
+        background-color: orangered;
+    }
+
+    100% {
+        background-color: yellow;
     }
 }
 

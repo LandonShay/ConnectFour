@@ -5,7 +5,7 @@
         public Blockers Blocker { get; set; } = Blockers.None;
         public BoxItem Item { get; set; } = BoxItem.None;
         public List<Creatures> Entities { get; set; } = new();
-        public (int, int) Coordinates { get; set; }
+        public (int x, int y) Coordinates { get; set; }
 
         public enum BoxItem
         {
