@@ -5,6 +5,8 @@ namespace ConnectFour.Data.Pacman
 {
     public class OrangeGhost : PacGhost
     {
+        public OrangeGhost() { TickTime = 1.2f; }
+
         private MoveDir PreviousDirection;
         private MoveDir MoveDirection;
 
@@ -48,6 +50,7 @@ namespace ConnectFour.Data.Pacman
 
                     if (!success)
                     {
+
                         // pick new valid direction that isn't the way they just came from
                     }
                 }

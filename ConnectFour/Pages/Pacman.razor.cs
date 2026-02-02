@@ -14,6 +14,7 @@ namespace ConnectFour.Pages
 
         private List<PacGridBox> GridBoxes = new();
         private PacGridBox? CurrentPlayerBox;
+        private PacMap Map = new PacMap();
 
         private int Score { get; set; }
 
@@ -38,7 +39,7 @@ namespace ConnectFour.Pages
             var x = 0;
             var y = 0;
 
-            foreach (var gridItem in PacMap.Grid)
+            foreach (var gridItem in Map.Grid)
             {
                 gridItem.Coordinates = (x, y);
                 x++;
@@ -55,16 +56,16 @@ namespace ConnectFour.Pages
             CurrentPlayerBox = GridBoxes.First(x => x.Entities.Any(y => y.Creature == Creatures.Pacman));
 
             GhostCountdown();
-            _ = Tick();
+
+            _ = PlayerTick();
         }
 
-        private async Task Tick()
+        #region Ticks
+        private async Task PlayerTick()
         {
             while (true)
             {
                 HandlePoweredUp();
-
-                MoveGhosts();
                 MovePacman();
 
                 CheckWin();
@@ -78,6 +79,27 @@ namespace ConnectFour.Pages
                 await Task.Delay((int)(_tickDuration * 1000));
             }
         }
+
+        private async Task GhostTick(PacGhost ghost)
+        {
+            var isFirstMove = true;
+
+            while (true)
+            {
+                if (!isFirstMove)
+                {
+                    await Task.Delay((int)(ghost.TickTime * 1000));
+                }
+                else
+                {
+                    isFirstMove = false;
+                }
+
+                ghost.Move(GridBoxes);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        #endregion
 
         #region Move
         private void MovePacman()
@@ -167,49 +189,42 @@ namespace ConnectFour.Pages
         #endregion
 
         #region Ghosts
-        private void GhostCountdown()
+        private async void GhostCountdown()
         {
             var reference = new Dictionary<Creatures, float>()
             {
                 { Creatures.OrangeGhost, 3 },
-                { Creatures.BlueGhost, 6 },
-                { Creatures.PinkGhost, 9 },
-                { Creatures.RedGhost, 12 },
+                { Creatures.BlueGhost, 3 },
+                { Creatures.PinkGhost, 3 },
+                { Creatures.RedGhost, 3 },
             };
 
             foreach (var item in reference)
             {
-                _ = Task.Run(async () =>
+                await Task.Delay((int)(item.Value * 1000));
+
+                var ghostBox = GridBoxes.First(x => x.Entities.Any(x => x.Creature == item.Key));
+                var entrance = GridBoxes.First(x => x.IsEntrance);
+
+                var ghost = ghostBox.Entities.First();
+                ghost.Ghost.InSpawn = false;
+
+                ghostBox.Entities.Remove(ghost);
+                entrance.Entities.Add(ghost);
+
+                var entity = ghost.Creature switch
                 {
-                    await Task.Delay((int)(item.Value * 1000));
+                    Creatures.OrangeGhost => OrangeGhost,
+                    Creatures.BlueGhost => BlueGhost,
+                    Creatures.PinkGhost => PinkGhost,
+                    _ => RedGhost
+                };
 
-                    var ghostBox = GridBoxes.First(x => x.Entities.Any(x => x.Creature == item.Key));
-                    var entrance = GridBoxes.First(x => x.IsEntrance);
-
-                    var ghost = ghostBox.Entities.First();
-                    ghost.Ghost.InSpawn = false;
-
-                    ghostBox.Entities.Remove(ghost);
-                    entrance.Entities.Add(ghost);
-
-                    if (ghost.Creature == Creatures.OrangeGhost)
-                    {
-                        OrangeGhost = ghost;
-                        OrangeGhost.Ghost.Entity = OrangeGhost;
-                        OrangeGhost.Ghost.CurrentBox = entrance;
-                    }
-                });
+                entity = ghost;
+                entity.Ghost.Entity = entity;
+                entity.Ghost.CurrentBox = entrance;
+                _ = GhostTick(entity.Ghost);
             }
-        }
-
-        private void MoveGhosts()
-        {
-            OrangeGhost.Ghost?.Move(GridBoxes);
-            BlueGhost.Ghost?.Move(GridBoxes);
-            PinkGhost.Ghost?.Move(GridBoxes);
-            RedGhost.Ghost?.Move(GridBoxes);
-
-            StateHasChanged();
         }
         #endregion
 

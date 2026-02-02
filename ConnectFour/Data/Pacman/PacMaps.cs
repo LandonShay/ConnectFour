@@ -2,9 +2,9 @@
 
 namespace ConnectFour.Data.Pacman
 {
-    public static class PacMap
+    public class PacMap
     {
-        public static List<PacGridBox> Grid = new()
+        public List<PacGridBox> Grid = new()
         {
             // 1st row
             new PacGridBox { Item = BoxItem.PowerPellet, Blocker = Blockers.TopLeftCorner },

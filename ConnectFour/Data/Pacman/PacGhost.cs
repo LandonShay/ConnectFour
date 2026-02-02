@@ -6,6 +6,7 @@ namespace ConnectFour.Data.Pacman
     {
         public PacGridBox CurrentBox = new();
         public PacEntity Entity = new();
+        public float TickTime = 1;
 
         public bool InSpawn { get; set; } = true;
         public bool Retreating { get; set; } // after getting eaten, retreat to spawn
