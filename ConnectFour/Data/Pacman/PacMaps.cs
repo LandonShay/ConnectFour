@@ -142,7 +142,7 @@ namespace ConnectFour.Data.Pacman
             new PacGridBox { Blocker = Blockers.Full },
 
             // 8th row
-            new PacGridBox { },
+            new PacGridBox { Teleport = true },
             new PacGridBox { },
             new PacGridBox { },
             new PacGridBox { Item = BoxItem.Pellet },
@@ -150,7 +150,7 @@ namespace ConnectFour.Data.Pacman
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { Blocker = Blockers.Full },
             new PacGridBox { Blocker = Blockers.Full },
-            new PacGridBox { },
+            new PacGridBox { }, 
             new PacGridBox { Blocker = Blockers.Full },
             new PacGridBox { Blocker = Blockers.Full },
             new PacGridBox { Item = BoxItem.Pellet },
@@ -158,7 +158,7 @@ namespace ConnectFour.Data.Pacman
             new PacGridBox { Item = BoxItem.Pellet },
             new PacGridBox { },
             new PacGridBox { },
-            new PacGridBox { },
+            new PacGridBox { Teleport = true },
 
             // 9th row
             new PacGridBox { Blocker = Blockers.Full },

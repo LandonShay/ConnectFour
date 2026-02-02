@@ -1,5 +1,5 @@
-﻿using static ConnectFour.Data.Pacman.PacGridBox;
-using static ConnectFour.Pages.Pacman;
+﻿using static ConnectFour.Pages.Pacman;
+using MoreLinq;
 
 namespace ConnectFour.Data.Pacman
 {
@@ -16,27 +16,7 @@ namespace ConnectFour.Data.Pacman
             {
                 if (!Retreating && !Recovering)
                 {
-                    var stopBlockers = new List<Blockers>();
-                    var horizontal = false;
-                    var index = 1;
-
-                    if (MoveDirection == MoveDir.Up)
-                    {
-                        stopBlockers = [Blockers.Top, Blockers.TopLeftCorner, Blockers.TopRightCorner];
-                        index = -1;
-                    }
-                    else if (MoveDirection == MoveDir.Right)
-                    {
-                        stopBlockers = [Blockers.Right, Blockers.TopRightCorner, Blockers.BottomRightCorner];
-                        horizontal = true;
-                    }
-                    else if (MoveDirection == MoveDir.Left)
-                    {
-                        stopBlockers = [Blockers.Left, Blockers.TopLeftCorner, Blockers.BottomLeftCorner];
-                        horizontal = true;
-                        index = -1;
-                    }
-                    else if (MoveDirection == MoveDir.None)
+                    if (MoveDirection == MoveDir.None)
                     { // at entrance
                         var rnd = new Random();
                         var value = rnd.NextDouble();
@@ -46,15 +26,40 @@ namespace ConnectFour.Data.Pacman
                         return;
                     }
 
-                    var success = TryMoveBox(gridBoxes, stopBlockers, index, horizontal);
+                    var success = TryMoveBox(MoveDirection, gridBoxes);
 
                     if (!success)
-                    {
+                    { // pick new valid direction that isn't the way they just came from
+                        var directions = new List<MoveDir> { MoveDir.Up, MoveDir.Down, MoveDir.Left, MoveDir.Right };
+                        var oppositeDirection = GetOppositeDirection(PreviousDirection);
 
-                        // pick new valid direction that isn't the way they just came from
+                        foreach (var direction in directions.Shuffle())
+                        {
+                            if (direction != PreviousDirection && direction != oppositeDirection)
+                            {
+                                var success2 = TryMoveBox(direction, gridBoxes);
+
+                                if (success2)
+                                {
+                                    PreviousDirection = direction;
+                                    return;
+                                }
+                            }
+                        }
                     }
                 }
             }
+        }
+
+        private MoveDir GetOppositeDirection(MoveDir dir)
+        {
+            return dir switch
+            {
+                MoveDir.Up => MoveDir.Down,
+                MoveDir.Down => MoveDir.Up,
+                MoveDir.Left => MoveDir.Right,
+                _ => MoveDir.Left
+            };
         }
     }
 }

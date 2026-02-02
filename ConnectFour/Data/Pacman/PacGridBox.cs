@@ -7,6 +7,7 @@
         public List<PacEntity> Entities { get; set; } = new();
         public (int x, int y) Coordinates { get; set; }
         public bool IsEntrance { get; set; }
+        public bool Teleport { get; set; }
 
         public enum BoxItem
         {
