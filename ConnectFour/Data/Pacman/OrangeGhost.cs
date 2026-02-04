@@ -4,7 +4,7 @@ using MoreLinq;
 namespace ConnectFour.Data.Pacman
 {
     public class OrangeGhost : PacGhost
-    {
+    { // to do: orange should have a chance of changing direction when reaching an intersection
         public OrangeGhost() { TickTime = 1.2f; }
 
         public override void Move(List<PacGridBox> gridBoxes)

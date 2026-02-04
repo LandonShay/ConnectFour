@@ -5,6 +5,7 @@ namespace ConnectFour.Data.Pacman
 {
     public abstract class PacGhost
     {
+        // to do: when player is powered up, each ghost attempts to flee to a designated area and can be eaten when contact is made with player
         protected MoveDir PreviousDirection;
         protected MoveDir MoveDirection;
 
