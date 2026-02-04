@@ -3,26 +3,33 @@
 @using static ConnectFour.Data.Pacman.PacGridBox
 @implements IDisposable
 
-<div class="game-map" @onkeydown="ChangeDirection" tabindex="0">
-    @foreach (var box in GridBoxes)
-    {
-        <div class="grid-box @(GetBlockerCss(box.Blocker))">
-            @if (box.Item == BoxItem.Pellet)
-            {
-                <div class="pellet"></div>
-            }
-            else if (box.Item == BoxItem.PowerPellet)
-            {
-                <div class="power-pellet"></div>
-            }
+<div class="page-container">
+    <div class="game-map" @onkeydown="ChangeDirection" tabindex="0">
+        @foreach (var box in GridBoxes)
+        {
+            <div class="grid-box @(GetBlockerCss(box.Blocker))">
+                @if (box.Item == BoxItem.Pellet)
+                {
+                    <div class="pellet"></div>
+                }
+                else if (box.Item == BoxItem.PowerPellet)
+                {
+                    <div class="power-pellet"></div>
+                }
 
-            @if (box.Entities.Count > 0)
-            {
-                <div class="@GetCreatureCss(box.Entities) @GetPacmanCss(box.Entities)"></div>
-            }
-        </div>
-    }
-    <span>Score: @Score</span>
+                @if (box.Entities.Count > 0)
+                {
+                    <div class="@GetCreatureCss(box.Entities) @GetPacmanCss(box.Entities)"></div>
+                }
+            </div>
+        }
+    </div>
+    <div class="score-container">
+        <span>Score</span>
+        <span>@Score</span>
+    </div>
+</div>
+<div class="message-container">
     @if (Status != GameStatus.None)
     {
         if (Status == GameStatus.Win)

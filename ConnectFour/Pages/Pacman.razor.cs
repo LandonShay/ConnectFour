@@ -42,6 +42,7 @@ namespace ConnectFour.Pages
         private void ResetMap()
         {
             GridBoxes.Clear();
+            Map = new PacMap();
 
             OrangeGhost = new();
             BlueGhost = new();
@@ -71,8 +72,10 @@ namespace ConnectFour.Pages
                 GridBoxes.Add(gridItem);
             }
 
+            playerCancel = new();
             CurrentPlayerBox = GridBoxes.First(x => x.Entities.Any(y => y.Creature == Creatures.Pacman));
 
+            StateHasChanged();
             GhostCountdown();
 
             _ = PlayerTick();
