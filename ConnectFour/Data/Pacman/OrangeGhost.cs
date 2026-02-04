@@ -7,9 +7,6 @@ namespace ConnectFour.Data.Pacman
     {
         public OrangeGhost() { TickTime = 1.2f; }
 
-        private MoveDir PreviousDirection;
-        private MoveDir MoveDirection;
-
         public override void Move(List<PacGridBox> gridBoxes)
         {
             if (!InSpawn)

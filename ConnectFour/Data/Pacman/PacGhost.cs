@@ -5,6 +5,9 @@ namespace ConnectFour.Data.Pacman
 {
     public abstract class PacGhost
     {
+        protected MoveDir PreviousDirection;
+        protected MoveDir MoveDirection;
+
         public PacGridBox CurrentBox = new();
         public PacEntity Entity = new();
         public float TickTime = 1;
@@ -78,6 +81,7 @@ namespace ConnectFour.Data.Pacman
                     CurrentBox = targetBox;
                     CurrentBox.Entities.Add(Entity);
 
+                    MoveDirection = direction;
                     return true;
                 }
             }

@@ -26,15 +26,33 @@ namespace ConnectFour.Pages
         private PacEntity PinkGhost { get; set; } = new();
         private PacEntity RedGhost { get; set; } = new();
 
+        private CancellationTokenSource playerCancel = new();
+        private List<CancellationTokenSource> ghostCancels = new();
+
         protected override void OnInitialized()
         {
             ResetMap();
         }
 
+        public void Dispose()
+        {
+            StopAllMovement();
+        }
+
         private void ResetMap()
         {
             GridBoxes.Clear();
+
+            OrangeGhost = new();
+            BlueGhost = new();
+            PinkGhost = new();
+            RedGhost = new();
+
+            MoveDirection = MoveDir.None;
             Status = GameStatus.None;
+            poweredUpElasped = 0;
+            IsPoweredUp = false;
+            Score = 0;
 
             var x = 0;
             var y = 0;
@@ -63,41 +81,80 @@ namespace ConnectFour.Pages
         #region Ticks
         private async Task PlayerTick()
         {
-            while (true)
+            try
             {
-                HandlePoweredUp();
-                MovePacman();
-
-                CheckWin();
-                StateHasChanged();
-
-                if (Status != GameStatus.None)
+                while (true)
                 {
-                    break;
-                }
+                    if (playerCancel.IsCancellationRequested)
+                    {
+                        break;
+                    }
 
-                await Task.Delay((int)(_tickDuration * 1000));
+                    HandlePoweredUp();
+                    MovePacman();
+
+                    CheckWin();
+                    StateHasChanged();
+
+                    if (Status != GameStatus.None)
+                    {
+                        break;
+                    }
+
+                    await Task.Delay((int)(_tickDuration * 1000), playerCancel.Token);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // expected
             }
         }
 
-        private async Task GhostTick(PacGhost ghost)
+        private async Task GhostTick(PacGhost ghost, CancellationTokenSource ghostCancel)
         {
-            var isFirstMove = true;
-
-            while (true)
+            try
             {
-                if (!isFirstMove)
-                {
-                    await Task.Delay((int)(ghost.TickTime * 1000));
-                }
-                else
-                {
-                    isFirstMove = false;
-                }
+                var isFirstMove = true;
 
-                ghost.Move(GridBoxes);
-                await InvokeAsync(StateHasChanged);
+                while (true)
+                {
+                    if (!isFirstMove)
+                    {
+                        await Task.Delay((int)(ghost.TickTime * 1000), ghostCancel.Token);
+                    }
+                    else
+                    {
+                        isFirstMove = false;
+                    }
+
+                    if (ghostCancel.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    ghost.Move(GridBoxes);
+
+                    CheckWin();
+                    await InvokeAsync(StateHasChanged);
+                }
             }
+            catch (TaskCanceledException)
+            {
+                // expected
+            }
+        }
+
+        public void StopAllMovement()
+        {
+            ghostCancels.ForEach(x => x.Cancel());
+            playerCancel.Cancel();
+
+            ghostCancels.Clear();
+
+            OrangeGhost = new();
+            BlueGhost = new();
+            PinkGhost = new();
+            RedGhost = new();
         }
         #endregion
 
@@ -223,7 +280,11 @@ namespace ConnectFour.Pages
                 entity = ghost;
                 entity.Ghost.Entity = entity;
                 entity.Ghost.CurrentBox = entrance;
-                _ = GhostTick(entity.Ghost);
+
+                var ghostCancel = new CancellationTokenSource();
+                ghostCancels.Add(ghostCancel);
+
+                _ = GhostTick(entity.Ghost, ghostCancel);
             }
         }
         #endregion
@@ -249,12 +310,14 @@ namespace ConnectFour.Pages
             if (!GridBoxes.Any(x => x.Item == BoxItem.Pellet))
             {
                 Status = GameStatus.Win;
+                StopAllMovement();
                 return;
             }
 
             if (!IsPoweredUp && GridBoxes.Any(x => x.Entities.Count > 1 && x.Entities.Any(x => x.Creature == Creatures.Pacman)))
             { // if pacman and a ghost are in the same box
                 Status = GameStatus.Lose;
+                StopAllMovement();
                 return;
             }
         }

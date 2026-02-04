@@ -1,6 +1,7 @@
 ﻿@page "/pac"
 @using ConnectFour.Data
 @using static ConnectFour.Data.Pacman.PacGridBox
+@implements IDisposable
 
 <div class="game-map" @onkeydown="ChangeDirection" tabindex="0">
     @foreach (var box in GridBoxes)
