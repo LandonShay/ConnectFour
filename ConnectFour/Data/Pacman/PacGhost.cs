@@ -6,8 +6,8 @@ namespace ConnectFour.Data.Pacman
     public abstract class PacGhost
     {
         // to do: when player is powered up, each ghost attempts to flee to a designated area and can be eaten when contact is made with player
-        protected MoveDir PreviousDirection;
-        protected MoveDir MoveDirection;
+        protected MoveDir PreviousDirection { get; private set; }
+        protected MoveDir MoveDirection { get; private set; }
 
         public PacGridBox CurrentBox = new();
         public PacEntity Entity = new();
@@ -19,7 +19,7 @@ namespace ConnectFour.Data.Pacman
 
         public virtual void Move(List<PacGridBox> gridBoxes) { }
 
-        public virtual bool TryMoveBox(MoveDir direction, List<PacGridBox> gridBoxes)
+        public virtual bool TryMoveBox(MoveDir direction, List<PacGridBox> gridBoxes, bool actuallyMove = true)
         {
             var blockers = new List<Blockers>();
             var horizontal = false;
@@ -46,16 +46,6 @@ namespace ConnectFour.Data.Pacman
                 // Down is the default so change nothing
             }
 
-            //if (CurrentBox.Teleport)
-            //{
-            //    var targetBox = gridBoxes.First(x => x.Teleport && x != CurrentBox);
-            //    CurrentBox.Entities.Remove(Entity);
-            //    CurrentBox = targetBox;
-            //    CurrentBox.Entities.Add(Entity);
-
-            //    return true;
-            //}
-
             if (!blockers.Contains(CurrentBox.Blocker))
             {
                 PacGridBox? targetBox = null;
@@ -78,16 +68,26 @@ namespace ConnectFour.Data.Pacman
                         targetBox = gridBoxes.First(x => x.Teleport && x != CurrentBox);
                     }
 
-                    CurrentBox.Entities.Remove(Entity);
-                    CurrentBox = targetBox;
-                    CurrentBox.Entities.Add(Entity);
+                    if (actuallyMove)
+                    {
+                        CurrentBox.Entities.Remove(Entity);
+                        CurrentBox = targetBox;
+                        CurrentBox.Entities.Add(Entity);
 
-                    MoveDirection = direction;
+                        ChangeDirection(direction);
+                    }
+
                     return true;
                 }
             }
 
             return false;
+        }
+
+        public void ChangeDirection(MoveDir dir)
+        {
+            PreviousDirection = MoveDirection;
+            MoveDirection = dir;
         }
     }
 }

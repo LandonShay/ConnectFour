@@ -4,8 +4,8 @@ using MoreLinq;
 namespace ConnectFour.Data.Pacman
 {
     public class OrangeGhost : PacGhost
-    { // to do: orange should have a chance of changing direction when reaching an intersection
-        public OrangeGhost() { TickTime = 1.2f; }
+    {
+        public OrangeGhost() { TickTime = .9f; }
 
         public override void Move(List<PacGridBox> gridBoxes)
         {
@@ -18,10 +18,13 @@ namespace ConnectFour.Data.Pacman
                         var rnd = new Random();
                         var value = rnd.NextDouble();
 
-                        MoveDirection = value > .5 ? MoveDir.Right : MoveDir.Left;
-                        PreviousDirection = MoveDirection;
+                        var newDirection = value > .5 ? MoveDir.Right : MoveDir.Left;
+                        ChangeDirection(newDirection);
+
                         return;
                     }
+
+                    HandleIntersection(gridBoxes);
 
                     var success = TryMoveBox(MoveDirection, gridBoxes);
 
@@ -38,12 +41,50 @@ namespace ConnectFour.Data.Pacman
 
                                 if (success2)
                                 {
-                                    PreviousDirection = direction;
                                     return;
                                 }
                             }
                         }
                     }
+                }
+            }
+        }
+
+        private void HandleIntersection(List<PacGridBox> gridBoxes)
+        {
+            var validDirections = new List<MoveDir>();
+            var directions = new List<MoveDir>() { MoveDir.Up, MoveDir.Left, MoveDir.Right, MoveDir.Down };
+
+            if (CurrentBox.IsEntrance)
+            {
+                return;
+            }
+            
+            var opposite = GetOppositeDirection(MoveDirection);
+
+            foreach (var dir in directions)
+            {
+                if (dir == opposite)
+                {
+                    continue;
+                }
+
+                var canMove = TryMoveBox(dir, gridBoxes, false);
+
+                if (canMove)
+                {
+                    validDirections.Add(dir);
+                }
+            }
+
+            if (validDirections.Count >= 2) // if it is an intersection
+            {
+                var rnd = new Random();
+
+                if (rnd.NextDouble() >= .5f) // 50% chance of changing direction when at an intersection
+                {
+                    var newDirection = validDirections.Shuffle().First();
+                    ChangeDirection(newDirection);
                 }
             }
         }
