@@ -10,7 +10,7 @@ namespace ConnectFour.Data.Pacman
             return Math.Abs(a.Coordinates.x - b.Coordinates.x) + Math.Abs(a.Coordinates.y - b.Coordinates.y);
         }
 
-        private static List<PacGridBox> GetNeighbors(PacGridBox box, List<PacGridBox> allBoxes)
+        public static List<PacGridBox> GetNeighbors(PacGridBox box, List<PacGridBox> allBoxes)
         {
             var directions = new List<MoveDir> { MoveDir.Up, MoveDir.Down, MoveDir.Left, MoveDir.Right };
             var neighbors = new List<PacGridBox>();

@@ -123,7 +123,8 @@ namespace ConnectFour.Pages
                 {
                     if (!isFirstMove)
                     {
-                        await Task.Delay((int)(ghost.TickTime * 1000), ghostCancel.Token);
+                        var tickTime = !ghost.Retreating ? ghost.TickTime : ghost.RetreatTickTime;
+                        await Task.Delay((int)(tickTime * 1000), ghostCancel.Token);
                     }
                     else
                     {
@@ -219,6 +220,8 @@ namespace ConnectFour.Pages
                     {
                         Score += 500;
                         IsPoweredUp = true;
+
+                        ToggleGhostsRetreat(true);
                     }
 
                     CurrentPlayerBox.Item = BoxItem.None;
@@ -251,28 +254,18 @@ namespace ConnectFour.Pages
         #region Ghosts
         private async void GhostCountdown()
         {
-            var reference = new Dictionary<Creatures, float>()
+            var ghosts = new List<PacEntity>();
+            var reference = new List<Creatures>()
             {
-                { Creatures.OrangeGhost, 3 },
-                { Creatures.BlueGhost, 3 },
-                { Creatures.PinkGhost, 3 },
-                { Creatures.RedGhost, 3 },
+                { Creatures.OrangeGhost },
+                { Creatures.BlueGhost },
+                { Creatures.PinkGhost },
+                { Creatures.RedGhost },
             };
 
-            foreach (var item in reference)
+            foreach (var ghost in reference)
             {
-                await Task.Delay((int)(item.Value * 1000));
-
-                var ghostBox = GridBoxes.First(x => x.Entities.Any(x => x.Creature == item.Key));
-                var entrance = GridBoxes.First(x => x.IsEntrance);
-
-                var ghost = ghostBox.Entities.First();
-                ghost.Ghost.InSpawn = false;
-
-                ghostBox.Entities.Remove(ghost);
-                entrance.Entities.Add(ghost);
-
-                var entity = ghost.Creature switch
+                var entity = ghost switch
                 {
                     Creatures.OrangeGhost => OrangeGhost,
                     Creatures.BlueGhost => BlueGhost,
@@ -280,14 +273,48 @@ namespace ConnectFour.Pages
                     _ => RedGhost
                 };
 
-                entity = ghost;
+                var ghostBox = GridBoxes.First(x => x.Entities.Any(x => x.Creature == ghost));
+                entity.Ghost = ghostBox.Entities.First().Ghost;
                 entity.Ghost.Entity = entity;
-                entity.Ghost.CurrentBox = entrance;
+                entity.Creature = ghost;
+
+                ghosts.Add(entity);
+            }
+
+            foreach (var ghost in ghosts)
+            {
+                await Task.Delay(2500);
+
+                var ghostBox = GridBoxes.First(x => x.Entities.Any(x => x.Creature == ghost.Creature));
+                var entrance = GridBoxes.First(x => x.IsEntrance);
+
+                ghostBox.Entities.Clear();
+
+                ghost.Ghost.InSpawn = false;
+                ghost.Ghost.MoveBox(entrance, GridBoxes);
 
                 var ghostCancel = new CancellationTokenSource();
                 ghostCancels.Add(ghostCancel);
 
-                _ = GhostTick(entity.Ghost, ghostCancel);
+                _ = GhostTick(ghost.Ghost, ghostCancel);
+            }
+        }
+
+        private void ToggleGhostsRetreat(bool retreating)
+        {
+            if (retreating)
+            {
+                OrangeGhost.Ghost.Retreating = true;
+                BlueGhost.Ghost.Retreating = true;
+                PinkGhost.Ghost.Retreating = true;
+                RedGhost.Ghost.Retreating = true;
+            }
+            else
+            {
+                OrangeGhost.Ghost.EndRetreat();
+                BlueGhost.Ghost.EndRetreat();
+                PinkGhost.Ghost.EndRetreat();
+                RedGhost.Ghost.EndRetreat();
             }
         }
         #endregion
@@ -304,6 +331,8 @@ namespace ConnectFour.Pages
                 {
                     IsPoweredUp = false;
                     poweredUpElasped = 0;
+
+                    ToggleGhostsRetreat(false);
                 }
             }
         }
@@ -328,24 +357,31 @@ namespace ConnectFour.Pages
         #region CSS
         private string GetCreatureCss(List<PacEntity> entities)
         {
+            var css = string.Empty;
+
             if (entities.Any(x => x.Creature == Creatures.RedGhost))
             {
-                return "ghost red-ghost";
+                css = "ghost red-ghost";
             }
             else if (entities.Any(x => x.Creature == Creatures.PinkGhost))
             {
-                return "ghost pink-ghost";
+                css = "ghost pink-ghost";
             }
             else if (entities.Any(x => x.Creature == Creatures.BlueGhost))
             {
-                return "ghost blue-ghost";
+                css = "ghost blue-ghost";
             }
             else if (entities.Any(x => x.Creature == Creatures.OrangeGhost))
             {
-                return "ghost orange-ghost";
+                css = "ghost orange-ghost";
             }
 
-            return string.Empty;
+            if (IsPoweredUp && entities.All(x => x.Creature != Creatures.Pacman))
+            {
+                css += " ghost-retreat";
+            }
+
+            return css;
         }
 
         private string GetPacmanCss(List<PacEntity> entities)

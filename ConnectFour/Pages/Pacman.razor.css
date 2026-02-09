@@ -59,6 +59,10 @@
     background-color: orange;
 }
 
+.ghost-retreat {
+    animation: ghostRetreat 1s infinite;
+}
+
 .pellet {
     background-color: yellow;
     height: 5px;
@@ -111,6 +115,20 @@
 
     100% {
         background-color: yellow;
+    }
+}
+
+@keyframes ghostRetreat {
+    0% {
+        background-color: blue;
+    }
+
+    50% {
+        background-color: white;
+    }
+
+    100% {
+        background-color: blue;
     }
 }
 

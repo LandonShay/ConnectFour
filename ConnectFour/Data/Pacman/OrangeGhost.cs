@@ -5,7 +5,7 @@ namespace ConnectFour.Data.Pacman
 { // orange moves randomly and can change directions at intersections
     public class OrangeGhost : PacGhost
     {
-        public OrangeGhost() { TickTime = .9f; }
+        public OrangeGhost() { TickTime = .65f; RetreatTickTime = .85f; }
 
         public override void Move(List<PacGridBox> gridBoxes)
         {
@@ -30,10 +30,9 @@ namespace ConnectFour.Data.Pacman
 
                     if (!success)
                     { // pick new valid direction that isn't the way they just came from
-                        var directions = new List<MoveDir> { MoveDir.Up, MoveDir.Down, MoveDir.Left, MoveDir.Right };
                         var oppositeDirection = GetOppositeDirection(PreviousDirection);
 
-                        foreach (var direction in directions.Shuffle())
+                        foreach (var direction in Directions.Shuffle())
                         {
                             if (direction != PreviousDirection && direction != oppositeDirection)
                             {
@@ -47,13 +46,20 @@ namespace ConnectFour.Data.Pacman
                         }
                     }
                 }
+                else if (Retreating)
+                {
+                    Retreat(gridBoxes);
+                }
+                else if (Recovering)
+                {
+                    
+                }
             }
         }
 
         private void HandleIntersection(List<PacGridBox> gridBoxes)
         {
             var validDirections = new List<MoveDir>();
-            var directions = new List<MoveDir>() { MoveDir.Up, MoveDir.Left, MoveDir.Right, MoveDir.Down };
 
             if (CurrentBox.IsEntrance)
             {
@@ -62,7 +68,7 @@ namespace ConnectFour.Data.Pacman
             
             var opposite = GetOppositeDirection(MoveDirection);
 
-            foreach (var dir in directions)
+            foreach (var dir in Directions)
             {
                 if (dir == opposite)
                 {
@@ -87,17 +93,6 @@ namespace ConnectFour.Data.Pacman
                     ChangeDirection(newDirection);
                 }
             }
-        }
-
-        private MoveDir GetOppositeDirection(MoveDir dir)
-        {
-            return dir switch
-            {
-                MoveDir.Up => MoveDir.Down,
-                MoveDir.Down => MoveDir.Up,
-                MoveDir.Left => MoveDir.Right,
-                _ => MoveDir.Left
-            };
         }
     }
 }
