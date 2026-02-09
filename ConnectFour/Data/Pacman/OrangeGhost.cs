@@ -9,51 +9,52 @@ namespace ConnectFour.Data.Pacman
 
         public override void Move(List<PacGridBox> gridBoxes)
         {
-            if (!InSpawn)
+            if (!Retreating && !Recovering && !GoingHome)
             {
-                if (!Retreating && !Recovering)
-                {
-                    if (MoveDirection == MoveDir.None)
-                    { // at entrance
-                        var rnd = new Random();
-                        var value = rnd.NextDouble();
+                if (MoveDirection == MoveDir.None)
+                { // at entrance
+                    var rnd = new Random();
+                    var value = rnd.NextDouble();
 
-                        var newDirection = value > .5 ? MoveDir.Right : MoveDir.Left;
-                        ChangeDirection(newDirection);
+                    var newDirection = value > .5 ? MoveDir.Right : MoveDir.Left;
+                    ChangeDirection(newDirection);
 
-                        return;
-                    }
+                    return;
+                }
 
-                    HandleIntersection(gridBoxes);
+                HandleIntersection(gridBoxes);
 
-                    var success = TryMoveBox(MoveDirection, gridBoxes);
+                var success = TryMoveBox(MoveDirection, gridBoxes);
 
-                    if (!success)
-                    { // pick new valid direction that isn't the way they just came from
-                        var oppositeDirection = GetOppositeDirection(PreviousDirection);
+                if (!success)
+                { // pick new valid direction that isn't the way they just came from
+                    var oppositeDirection = GetOppositeDirection(PreviousDirection);
 
-                        foreach (var direction in Directions.Shuffle())
+                    foreach (var direction in Directions.Shuffle())
+                    {
+                        if (direction != PreviousDirection && direction != oppositeDirection)
                         {
-                            if (direction != PreviousDirection && direction != oppositeDirection)
-                            {
-                                var success2 = TryMoveBox(direction, gridBoxes);
+                            var success2 = TryMoveBox(direction, gridBoxes);
 
-                                if (success2)
-                                {
-                                    return;
-                                }
+                            if (success2)
+                            {
+                                return;
                             }
                         }
                     }
                 }
-                else if (Retreating)
-                {
-                    Retreat(gridBoxes);
-                }
-                else if (Recovering)
-                {
-                    
-                }
+            }
+            else if (Retreating)
+            {
+                Retreat(gridBoxes);
+            }
+            else if (GoingHome)
+            {
+                GoHome(gridBoxes);
+            }
+            else if (Recovering)
+            {
+                
             }
         }
 

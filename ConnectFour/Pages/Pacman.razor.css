@@ -63,6 +63,11 @@
     animation: ghostRetreat 1s infinite;
 }
 
+.ghost-go-home{
+    background-color: rgba(0, 0, 0, 0);
+    border: solid 2px white;
+}
+
 .pellet {
     background-color: yellow;
     height: 5px;

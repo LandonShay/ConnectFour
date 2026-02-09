@@ -123,7 +123,21 @@ namespace ConnectFour.Pages
                 {
                     if (!isFirstMove)
                     {
-                        var tickTime = !ghost.Retreating ? ghost.TickTime : ghost.RetreatTickTime;
+                        var tickTime = 0f;
+
+                        if (ghost.Retreating)
+                        {
+                            tickTime = ghost.RetreatTickTime;
+                        }
+                        else if (ghost.GoingHome)
+                        {
+                            tickTime = ghost.GoingHomeTickTime;
+                        }
+                        else
+                        {
+                            tickTime = ghost.TickTime;
+                        }
+                        
                         await Task.Delay((int)(tickTime * 1000), ghostCancel.Token);
                     }
                     else
@@ -275,6 +289,7 @@ namespace ConnectFour.Pages
 
                 var ghostBox = GridBoxes.First(x => x.Entities.Any(x => x.Creature == ghost));
                 entity.Ghost = ghostBox.Entities.First().Ghost;
+                entity.Ghost.StartBox = ghostBox;
                 entity.Ghost.Entity = entity;
                 entity.Creature = ghost;
 
@@ -326,6 +341,15 @@ namespace ConnectFour.Pages
                 if (poweredUpElasped < _poweredUpDuration)
                 {
                     poweredUpElasped += _tickDuration;
+
+                    if (CurrentPlayerBox!.Entities.Count > 1)
+                    {
+                        foreach (var entity in CurrentPlayerBox.Entities.Where(x => x.Creature != Creatures.Pacman))
+                        {
+                            entity.Ghost.GoingHome = true;
+                            entity.Ghost.Retreating = false;
+                        }
+                    }
                 }
                 else
                 {
@@ -347,10 +371,20 @@ namespace ConnectFour.Pages
             }
 
             if (!IsPoweredUp && GridBoxes.Any(x => x.Entities.Count > 1 && x.Entities.Any(x => x.Creature == Creatures.Pacman)))
-            { // if pacman and a ghost are in the same box
-                Status = GameStatus.Lose;
-                StopAllMovement();
-                return;
+            {
+                var contestedBoxes = GridBoxes.FindAll(x => x.Entities.Count > 2);
+
+                foreach (var box in contestedBoxes)
+                {
+                    var ghosts = box.Entities.FindAll(x => x.Ghost != null);
+
+                    if (ghosts.All(x => !x.Ghost.GoingHome && !x.Ghost.Retreating))
+                    {
+                        Status = GameStatus.Lose;
+                        StopAllMovement();
+                        return;
+                    }
+                }
             }
         }
 
@@ -379,6 +413,11 @@ namespace ConnectFour.Pages
             if (IsPoweredUp && entities.All(x => x.Creature != Creatures.Pacman))
             {
                 css += " ghost-retreat";
+            }
+
+            if (entities.Any(x => x.Ghost != null && x.Ghost.GoingHome))
+            {
+                css = "ghost ghost-go-home";
             }
 
             return css;

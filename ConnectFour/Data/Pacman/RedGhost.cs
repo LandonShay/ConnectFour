@@ -8,7 +8,7 @@ namespace ConnectFour.Data.Pacman
 
         public override void Move(List<PacGridBox> gridBoxes)
         {
-            if (!Retreating && !Recovering)
+            if (!Retreating && !Recovering && !GoingHome)
             {
                 var pacmanBox = gridBoxes.Find(x => x.Entities.Any(x => x.Creature == Creatures.Pacman));
 
@@ -36,6 +36,10 @@ namespace ConnectFour.Data.Pacman
             else if (Retreating)
             {
                 Retreat(gridBoxes);
+            }
+            else if (GoingHome)
+            {
+                GoHome(gridBoxes);
             }
         }
     }

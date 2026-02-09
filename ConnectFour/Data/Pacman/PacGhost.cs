@@ -12,11 +12,15 @@ namespace ConnectFour.Data.Pacman
         protected readonly List<MoveDir> Directions = new() { MoveDir.Up, MoveDir.Down, MoveDir.Left, MoveDir.Right };
 
         public PacGridBox CurrentBox = new();
+        public PacGridBox StartBox = new();
         public PacEntity Entity = new();
+
         public float TickTime = 1;
         public float RetreatTickTime = 2;
+        public float GoingHomeTickTime = .15f;
 
         public bool InSpawn { get; set; } = true;
+        public bool GoingHome { get; set; }
         public bool Retreating { get; set; } // after getting eaten, retreat to spawn
         public bool Recovering { get; set; } // recovery in spawn
 
@@ -121,6 +125,7 @@ namespace ConnectFour.Data.Pacman
             MoveDirection = dir;
         }
 
+        #region Retreat
         public void Retreat(List<PacGridBox> gridBoxes)
         {
             if (RetreatDestination == null)
@@ -176,6 +181,26 @@ namespace ConnectFour.Data.Pacman
             RetreatDestination = null;
             Retreating = false;
         }
+        #endregion
+
+        #region Going Home
+        public void GoHome(List<PacGridBox> gridBoxes)
+        {
+            var path = AStar.FindPath(CurrentBox, StartBox, gridBoxes);
+
+            if (path.Count > 0)
+            {
+                var targetBox = path[0];
+                MoveBox(targetBox, gridBoxes);
+
+                if (CurrentBox == StartBox)
+                {
+                    GoingHome = false;
+                    Recovering = true;
+                }
+            }
+        }
+        #endregion
 
         #region Helper
         protected PacGridBox? GetBoxInDirection(MoveDir direction, List<PacGridBox> gridBoxes)
