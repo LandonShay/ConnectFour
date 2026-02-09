@@ -70,10 +70,7 @@ namespace ConnectFour.Data.Pacman
 
                     if (actuallyMove)
                     {
-                        CurrentBox.Entities.Remove(Entity);
-                        CurrentBox = targetBox;
-                        CurrentBox.Entities.Add(Entity);
-
+                        MoveBox(targetBox);
                         ChangeDirection(direction);
                     }
 
@@ -82,6 +79,13 @@ namespace ConnectFour.Data.Pacman
             }
 
             return false;
+        }
+
+        public void MoveBox(PacGridBox targetBox)
+        {
+            CurrentBox.Entities.Remove(Entity);
+            CurrentBox = targetBox;
+            CurrentBox.Entities.Add(Entity);
         }
 
         public void ChangeDirection(MoveDir dir)

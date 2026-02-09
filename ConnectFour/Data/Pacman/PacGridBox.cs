@@ -9,6 +9,12 @@
         public bool IsEntrance { get; set; }
         public bool Teleport { get; set; }
 
+        // Pathfinding
+        public int GCost;
+        public int HCost;
+        public PacGridBox? Parent = null;
+        public int FCost => GCost + HCost;
+
         public enum BoxItem
         {
             None,
