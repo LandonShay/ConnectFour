@@ -4,7 +4,7 @@ namespace ConnectFour.Data.Pacman
 { // red straight up chases you
     public class RedGhost : PacGhost
     {
-        public RedGhost() { TickTime = .4f; RetreatTickTime = .9f }
+        public RedGhost() { TickTime = .35f; RetreatTickTime = .9f; }
 
         public override void Move(List<PacGridBox> gridBoxes)
         {

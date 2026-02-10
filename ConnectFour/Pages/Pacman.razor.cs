@@ -6,11 +6,14 @@ namespace ConnectFour.Pages
 {
     public partial class Pacman
     {
-        private readonly float _tickDuration = .35f;
+        private readonly float _tickDuration = .3f;
         private readonly float _poweredUpDuration = 5f;
 
         private GameStatus Status = GameStatus.None;
-        private MoveDir MoveDirection = MoveDir.None;
+        private MoveDir CurrentMoveDirection = MoveDir.None;
+
+        private MoveDir QueuedMoveDirection = MoveDir.None;
+        private int QueuedMoveTicksRemaining;
 
         private List<PacGridBox> GridBoxes = new();
         private PacGridBox? CurrentPlayerBox;
@@ -51,7 +54,9 @@ namespace ConnectFour.Pages
             PinkGhost = new();
             RedGhost = new();
 
-            MoveDirection = MoveDir.None;
+            CurrentMoveDirection = MoveDir.None;
+            QueuedMoveDirection = MoveDir.None;
+            QueuedMoveTicksRemaining = 0;
             Status = GameStatus.None;
             poweredUpElasped = 0;
             IsPoweredUp = false;
@@ -186,25 +191,42 @@ namespace ConnectFour.Pages
         #region Move
         private void MovePacman()
         {
-            if (MoveDirection == MoveDir.Up)
+            if (QueuedMoveDirection != MoveDir.None)
             {
-                var stopBlockers = new List<Blockers>() { Blockers.Top, Blockers.TopLeftCorner, Blockers.TopRightCorner };
-                TryMoveBox(stopBlockers, -1, false);
+                if (CanMove(QueuedMoveDirection))
+                {
+                    CurrentMoveDirection = QueuedMoveDirection;
+                    QueuedMoveDirection = MoveDir.None;
+                    QueuedMoveTicksRemaining = 0;
+                }
+                else
+                {
+                    QueuedMoveTicksRemaining--;
+
+                    if (QueuedMoveTicksRemaining <= 0)
+                    {
+                        QueuedMoveDirection = MoveDir.None;
+                    }
+                }
             }
-            else if (MoveDirection == MoveDir.Down)
+
+            switch (CurrentMoveDirection)
             {
-                var stopBlockers = new List<Blockers>() { Blockers.Bottom, Blockers.BottomLeftCorner, Blockers.BottomRightCorner };
-                TryMoveBox(stopBlockers, 1, false);
-            }
-            else if (MoveDirection == MoveDir.Right)
-            {
-                var stopBlockers = new List<Blockers>() { Blockers.Right, Blockers.TopRightCorner, Blockers.BottomRightCorner };
-                TryMoveBox(stopBlockers, 1, true);
-            }
-            else if (MoveDirection == MoveDir.Left)
-            {
-                var stopBlockers = new List<Blockers>() { Blockers.Left, Blockers.TopLeftCorner, Blockers.BottomLeftCorner };
-                TryMoveBox(stopBlockers, -1, true);
+                case MoveDir.Up:
+                    TryMoveBox([Blockers.Top, Blockers.TopLeftCorner, Blockers.TopRightCorner], -1, false);
+                    break;
+
+                case MoveDir.Down:
+                    TryMoveBox([Blockers.Bottom, Blockers.BottomLeftCorner, Blockers.BottomRightCorner], 1, false);
+                    break;
+
+                case MoveDir.Left:
+                    TryMoveBox([Blockers.Left, Blockers.TopLeftCorner, Blockers.BottomLeftCorner], -1, true);
+                    break;
+
+                case MoveDir.Right:
+                    TryMoveBox([Blockers.Right, Blockers.TopRightCorner, Blockers.BottomRightCorner], 1, true);
+                    break;
             }
         }
 
@@ -251,6 +273,42 @@ namespace ConnectFour.Pages
             }
         }
 
+        private bool CanMove(MoveDir dir)
+        {
+            return dir switch
+            {
+                MoveDir.Up => CanMoveBox([Blockers.Top, Blockers.TopLeftCorner, Blockers.TopRightCorner], -1,false),
+                MoveDir.Down => CanMoveBox([Blockers.Bottom, Blockers.BottomLeftCorner, Blockers.BottomRightCorner], 1, false),
+                MoveDir.Left => CanMoveBox([Blockers.Left, Blockers.TopLeftCorner, Blockers.BottomLeftCorner], -1, true),
+                MoveDir.Right => CanMoveBox([Blockers.Right, Blockers.TopRightCorner, Blockers.BottomRightCorner], 1, true),
+                _ => false
+            };
+        }
+
+        private bool CanMoveBox(List<Blockers> stopBlockers, int moveIndex, bool horizontal)
+        {
+            if (stopBlockers.Contains(CurrentPlayerBox!.Blocker))
+            {
+                return false;
+            }
+
+            PacGridBox? targetBox;
+
+            if (horizontal)
+            {
+                targetBox = GridBoxes.Find(x => x.Coordinates.x == CurrentPlayerBox.Coordinates.x + moveIndex &&
+                                                x.Coordinates.y == CurrentPlayerBox.Coordinates.y);
+            }
+            else
+            {
+                targetBox = GridBoxes.Find(x => x.Coordinates.x == CurrentPlayerBox.Coordinates.x &&
+                                                x.Coordinates.y == CurrentPlayerBox.Coordinates.y + moveIndex);
+            }
+
+            return targetBox != null && targetBox.Blocker != Blockers.Full;
+        }
+
+
         private void ChangeDirection(KeyboardEventArgs e)
         {
             var key = e.Key.ToLower();
@@ -258,18 +316,20 @@ namespace ConnectFour.Pages
             switch (key)
             {
                 case "w":
-                    MoveDirection = MoveDir.Up;
+                    QueuedMoveDirection = MoveDir.Up;
                     break;
                 case "a":
-                    MoveDirection = MoveDir.Left;
+                    QueuedMoveDirection = MoveDir.Left;
                     break;
                 case "s":
-                    MoveDirection = MoveDir.Down;
+                    QueuedMoveDirection = MoveDir.Down;
                     break;
                 case "d":
-                    MoveDirection = MoveDir.Right;
+                    QueuedMoveDirection = MoveDir.Right;
                     break;
             }
+
+            QueuedMoveTicksRemaining = 2;
         }
         #endregion
 
