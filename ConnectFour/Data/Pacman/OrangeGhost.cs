@@ -5,14 +5,20 @@ namespace ConnectFour.Data.Pacman
 { // orange moves randomly and can change directions at intersections
     public class OrangeGhost : PacGhost
     {
-        public OrangeGhost() { TickTime = .65f; RetreatTickTime = .85f; }
+        public OrangeGhost() { TickTime = .65f; RetreatTickTime = .9f; }
 
         public override void Move(List<PacGridBox> gridBoxes)
         {
             if (!Retreating && !Recovering && !GoingHome)
             {
-                if (MoveDirection == MoveDir.None)
-                { // at entrance
+                if (CurrentBox.InGhostSpawn)
+                {
+                    ExitSpawn(gridBoxes);
+                    return;
+                }
+
+                if (CurrentBox.IsEntrance && MoveDirection != MoveDir.Left && MoveDirection != MoveDir.Right)
+                {
                     var rnd = new Random();
                     var value = rnd.NextDouble();
 
@@ -44,17 +50,9 @@ namespace ConnectFour.Data.Pacman
                     }
                 }
             }
-            else if (Retreating)
+            else
             {
-                Retreat(gridBoxes);
-            }
-            else if (GoingHome)
-            {
-                GoHome(gridBoxes);
-            }
-            else if (Recovering)
-            {
-                
+                base.Move(gridBoxes);
             }
         }
 

@@ -1,15 +1,14 @@
-﻿using MoreLinq;
-using static ConnectFour.Data.Pacman.PacGridBox;
+﻿using static ConnectFour.Data.Pacman.PacGridBox;
 using static ConnectFour.Pages.Pacman;
+using MoreLinq;
 
 namespace ConnectFour.Data.Pacman
 {
     public abstract class PacGhost
     {
-        // to do: when player is powered up, each ghost attempts to flee to a designated area and can be eaten when contact is made with player
+        protected readonly List<MoveDir> Directions = [MoveDir.Up, MoveDir.Down, MoveDir.Left, MoveDir.Right];
         protected MoveDir PreviousDirection { get; private set; }
         protected MoveDir MoveDirection { get; private set; }
-        protected readonly List<MoveDir> Directions = new() { MoveDir.Up, MoveDir.Down, MoveDir.Left, MoveDir.Right };
 
         public PacGridBox CurrentBox = new();
         public PacGridBox StartBox = new();
@@ -17,9 +16,9 @@ namespace ConnectFour.Data.Pacman
 
         public float TickTime = 1;
         public float RetreatTickTime = 2;
-        public float GoingHomeTickTime = .15f;
+        public float RecoverTickTime = .5f;
+        public float GoingHomeTickTime = .25f;
 
-        public bool InSpawn { get; set; } = true;
         public bool GoingHome { get; set; }
         public bool Retreating { get; set; } // after getting eaten, retreat to spawn
         public bool Recovering { get; set; } // recovery in spawn
@@ -29,9 +28,24 @@ namespace ConnectFour.Data.Pacman
         protected float recoverElapsed = 0;
         protected readonly float _recoveryTime = 2.5f;
 
-        public virtual void Move(List<PacGridBox> gridBoxes) { }
+        #region Movement
+        public virtual void Move(List<PacGridBox> gridBoxes) 
+        {
+            if (Retreating)
+            {
+                Retreat(gridBoxes);
+            }
+            else if (GoingHome)
+            {
+                GoHome(gridBoxes);
+            }
+            else if (Recovering)
+            {
+                Recover();
+            }
+        }
 
-        public virtual bool TryMoveBox(MoveDir direction, List<PacGridBox> gridBoxes, bool actuallyMove = true)
+        protected virtual bool TryMoveBox(MoveDir direction, List<PacGridBox> gridBoxes, bool actuallyMove = true)
         {
             var blockers = new List<Blockers>();
             var horizontal = false;
@@ -93,7 +107,7 @@ namespace ConnectFour.Data.Pacman
             return false;
         }
 
-        public void MoveBox(PacGridBox targetBox, List<PacGridBox> gridBoxes)
+        protected void MoveBox(PacGridBox targetBox, List<PacGridBox> gridBoxes)
         {
             var currentNeighbors = AStar.GetNeighbors(CurrentBox, gridBoxes);
 
@@ -105,13 +119,13 @@ namespace ConnectFour.Data.Pacman
 
                     if (dirBox == targetBox)
                     {
-                        MoveDirection = direction;
+                        ChangeDirection(direction);
                     }
                 }
             }
             else
             {
-                MoveDirection = MoveDir.None;
+                ChangeDirection(MoveDir.None);
             }
 
             CurrentBox.Entities.Remove(Entity);
@@ -119,14 +133,24 @@ namespace ConnectFour.Data.Pacman
             CurrentBox.Entities.Add(Entity);
         }
 
-        public void ChangeDirection(MoveDir dir)
+        protected void ExitSpawn(List<PacGridBox> gridBoxes)
+        {
+            var entrance = gridBoxes.First(x => x.IsEntrance);
+            var path = AStar.FindPath(CurrentBox, entrance, gridBoxes);
+
+            var targetBox = path[0];
+            MoveBox(targetBox, gridBoxes);
+        }
+
+        protected void ChangeDirection(MoveDir dir)
         {
             PreviousDirection = MoveDirection;
             MoveDirection = dir;
         }
+        #endregion
 
         #region Retreat
-        public void Retreat(List<PacGridBox> gridBoxes)
+        private void Retreat(List<PacGridBox> gridBoxes)
         {
             if (RetreatDestination == null)
             {
@@ -147,7 +171,7 @@ namespace ConnectFour.Data.Pacman
             }
         }
 
-        public void GetRetreatDestination(List<PacGridBox> gridBoxes)
+        private void GetRetreatDestination(List<PacGridBox> gridBoxes)
         {
             var pacman = gridBoxes.Find(x => x.Entities.Any(x => x.Creature == Creatures.Pacman));
 
@@ -184,7 +208,7 @@ namespace ConnectFour.Data.Pacman
         #endregion
 
         #region Going Home
-        public void GoHome(List<PacGridBox> gridBoxes)
+        private void GoHome(List<PacGridBox> gridBoxes)
         {
             var path = AStar.FindPath(CurrentBox, StartBox, gridBoxes);
 
@@ -197,6 +221,24 @@ namespace ConnectFour.Data.Pacman
                 {
                     GoingHome = false;
                     Recovering = true;
+
+                    ChangeDirection(MoveDir.None);
+                }
+            }
+        }
+        #endregion
+
+        #region Recover
+        private void Recover()
+        {
+            if (Recovering)
+            {
+                recoverElapsed += RecoverTickTime;
+
+                if (recoverElapsed >= _recoveryTime)
+                {
+                    Recovering = false;
+                    recoverElapsed = 0;
                 }
             }
         }

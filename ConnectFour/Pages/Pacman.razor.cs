@@ -6,7 +6,7 @@ namespace ConnectFour.Pages
 {
     public partial class Pacman
     {
-        private readonly float _tickDuration = .25f;
+        private readonly float _tickDuration = .35f;
         private readonly float _poweredUpDuration = 5f;
 
         private GameStatus Status = GameStatus.None;
@@ -20,6 +20,7 @@ namespace ConnectFour.Pages
 
         private bool IsPoweredUp { get; set; }
         private float poweredUpElasped { get; set; }
+        private int GhostsEatenCombo { get; set; }
 
         private PacEntity OrangeGhost { get; set; } = new();
         private PacEntity BlueGhost { get; set; } = new();
@@ -29,6 +30,7 @@ namespace ConnectFour.Pages
         private CancellationTokenSource playerCancel = new();
         private List<CancellationTokenSource> ghostCancels = new();
 
+        #region Config
         protected override void OnInitialized()
         {
             ResetMap();
@@ -80,6 +82,7 @@ namespace ConnectFour.Pages
 
             _ = PlayerTick();
         }
+        #endregion
 
         #region Ticks
         private async Task PlayerTick()
@@ -132,6 +135,10 @@ namespace ConnectFour.Pages
                         else if (ghost.GoingHome)
                         {
                             tickTime = ghost.GoingHomeTickTime;
+                        }
+                        else if (ghost.Recovering)
+                        {
+                            tickTime = ghost.RecoverTickTime;
                         }
                         else
                         {
@@ -234,6 +241,7 @@ namespace ConnectFour.Pages
                     {
                         Score += 500;
                         IsPoweredUp = true;
+                        poweredUpElasped = 0;
 
                         ToggleGhostsRetreat(true);
                     }
@@ -287,12 +295,7 @@ namespace ConnectFour.Pages
                     _ => RedGhost
                 };
 
-                var ghostBox = GridBoxes.First(x => x.Entities.Any(x => x.Creature == ghost));
-                entity.Ghost = ghostBox.Entities.First().Ghost;
-                entity.Ghost.StartBox = ghostBox;
-                entity.Ghost.Entity = entity;
-                entity.Creature = ghost;
-
+                entity.ConfigureGhost(GridBoxes, ghost);
                 ghosts.Add(entity);
             }
 
@@ -304,9 +307,6 @@ namespace ConnectFour.Pages
                 var entrance = GridBoxes.First(x => x.IsEntrance);
 
                 ghostBox.Entities.Clear();
-
-                ghost.Ghost.InSpawn = false;
-                ghost.Ghost.MoveBox(entrance, GridBoxes);
 
                 var ghostCancel = new CancellationTokenSource();
                 ghostCancels.Add(ghostCancel);
@@ -346,8 +346,12 @@ namespace ConnectFour.Pages
                     {
                         foreach (var entity in CurrentPlayerBox.Entities.Where(x => x.Creature != Creatures.Pacman))
                         {
+                            GhostsEatenCombo += 1;
+
                             entity.Ghost.GoingHome = true;
                             entity.Ghost.Retreating = false;
+
+                            Score += 800 * GhostsEatenCombo;
                         }
                     }
                 }
@@ -355,6 +359,7 @@ namespace ConnectFour.Pages
                 {
                     IsPoweredUp = false;
                     poweredUpElasped = 0;
+                    GhostsEatenCombo = 0;
 
                     ToggleGhostsRetreat(false);
                 }

@@ -6,6 +6,7 @@
         public BoxItem Item { get; set; } = BoxItem.None;
         public List<PacEntity> Entities { get; set; } = new();
         public (int x, int y) Coordinates { get; set; }
+        public bool InGhostSpawn { get; set; }
         public bool IsEntrance { get; set; }
         public bool Teleport { get; set; }
 

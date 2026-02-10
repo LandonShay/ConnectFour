@@ -4,12 +4,18 @@ namespace ConnectFour.Data.Pacman
 { // red straight up chases you
     public class RedGhost : PacGhost
     {
-        public RedGhost() { TickTime = .35f; RetreatTickTime = .55f; }
+        public RedGhost() { TickTime = .4f; RetreatTickTime = .9f }
 
         public override void Move(List<PacGridBox> gridBoxes)
         {
             if (!Retreating && !Recovering && !GoingHome)
             {
+                if (CurrentBox.InGhostSpawn)
+                {
+                    ExitSpawn(gridBoxes);
+                    return;
+                }
+
                 var pacmanBox = gridBoxes.Find(x => x.Entities.Any(x => x.Creature == Creatures.Pacman));
 
                 if (pacmanBox != null)
@@ -33,13 +39,9 @@ namespace ConnectFour.Data.Pacman
                     }
                 }
             }
-            else if (Retreating)
+            else
             {
-                Retreat(gridBoxes);
-            }
-            else if (GoingHome)
-            {
-                GoHome(gridBoxes);
+                base.Move(gridBoxes);
             }
         }
     }
