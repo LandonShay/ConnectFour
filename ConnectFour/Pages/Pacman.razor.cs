@@ -437,13 +437,14 @@ namespace ConnectFour.Pages
 
             if (!IsPoweredUp && GridBoxes.Any(x => x.Entities.Count > 1 && x.Entities.Any(x => x.Creature == Creatures.Pacman)))
             {
-                var contestedBoxes = GridBoxes.FindAll(x => x.Entities.Count > 2);
+                var contestedBoxes = GridBoxes.FindAll(x => x.Entities.Count > 1);
 
                 foreach (var box in contestedBoxes)
                 {
+                    var pacman = box.Entities.Find(x => x.Creature == Creatures.Pacman);
                     var ghosts = box.Entities.FindAll(x => x.Ghost != null);
 
-                    if (ghosts.All(x => !x.Ghost.GoingHome && !x.Ghost.Retreating))
+                    if (ghosts.All(x => !x.Ghost.GoingHome && !x.Ghost.Retreating) && pacman != null)
                     {
                         Status = GameStatus.Lose;
                         StopAllMovement();

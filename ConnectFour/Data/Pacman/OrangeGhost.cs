@@ -5,7 +5,7 @@ namespace ConnectFour.Data.Pacman
 { // orange moves randomly and can change directions at intersections
     public class OrangeGhost : PacGhost
     {
-        public OrangeGhost() { TickTime = .6f; RetreatTickTime = .9f; }
+        public OrangeGhost() { TickTime = .6f; }
 
         public override void Move(List<PacGridBox> gridBoxes, MoveDir playerMoveDir)
         {

@@ -5,12 +5,18 @@ namespace ConnectFour.Data.Pacman
 { // pink ghost tries to move towards the box 2 boxes ahead of your position.
     public class PinkGhost : PacGhost
     {
-        public PinkGhost() { TickTime = .4f; RetreatTickTime = .9f; }
+        public PinkGhost() { TickTime = .4f; }
 
         public override void Move(List<PacGridBox> gridBoxes, MoveDir playerMoveDir)
         {
             if (!Retreating && !Recovering && !GoingHome)
             {
+                if (CurrentBox.InGhostSpawn)
+                {
+                    ExitSpawn(gridBoxes);
+                    return;
+                }
+
                 var pacmanBox = gridBoxes.Find(x => x.Entities.Any(e => e.Creature == Creatures.Pacman));
 
                 if (pacmanBox != null)

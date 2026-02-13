@@ -15,9 +15,9 @@ namespace ConnectFour.Data.Pacman
         public PacEntity Entity = new();
 
         public float TickTime = 1;
-        public float RetreatTickTime = 2;
         public float RecoverTickTime = .5f;
         public float GoingHomeTickTime = .25f;
+        public float RetreatTickTime { get { return 1.2f; } }
 
         public bool GoingHome { get; set; }
         public bool Retreating { get; set; } // after getting eaten, retreat to spawn
