@@ -247,9 +247,14 @@ namespace ConnectFour.Pages
                                                     x.Coordinates.y == CurrentPlayerBox.Coordinates.y + moveIndex);
                 }
 
-                if (targetBox != null && targetBox.Blocker != Blockers.Full)
+                if ((targetBox != null && targetBox.Blocker != Blockers.Full) || (targetBox == null && CurrentPlayerBox.Teleport))
                 {
                     var pac = CurrentPlayerBox.Entities.First(x => x.Creature == Creatures.Pacman);
+
+                    if (targetBox == null)
+                    {
+                        targetBox = GridBoxes.First(x => x.Teleport && x != CurrentPlayerBox);
+                    }
 
                     CurrentPlayerBox.Entities.Remove(pac);
                     CurrentPlayerBox = targetBox;
