@@ -1,0 +1,318 @@
+﻿using static ConnectFour.Data.Pacman.PacGridBox;
+using static ConnectFour.Pages.Pacman;
+using MoreLinq;
+
+namespace ConnectFour.Data.Pacman
+{
+    public abstract class PacGhost
+    {
+        protected readonly List<MoveDir> Directions = [MoveDir.Up, MoveDir.Down, MoveDir.Left, MoveDir.Right];
+        protected MoveDir PreviousDirection { get; private set; }
+        protected MoveDir MoveDirection { get; private set; }
+
+        public PacGridBox CurrentBox = new();
+        public PacGridBox StartBox = new();
+        public PacEntity Entity = new();
+
+        public float TickTime = 1;
+        public float RecoverTickTime = .5f;
+        public float GoingHomeTickTime = .25f;
+        public float RetreatTickTime { get { return 1.2f; } }
+
+        public bool GoingHome { get; set; }
+        public bool Retreating { get; set; } // after getting eaten, retreat to spawn
+        public bool Recovering { get; set; } // recovery in spawn
+
+        protected PacGridBox? RetreatDestination { get; set; }
+
+        protected float recoverElapsed = 0;
+        protected readonly float _recoveryTime = 2.5f;
+
+        #region Movement
+        public virtual void Move(List<PacGridBox> gridBoxes, MoveDir playerMoveDir) 
+        {
+            if (Retreating)
+            {
+                Retreat(gridBoxes);
+            }
+            else if (GoingHome)
+            {
+                GoHome(gridBoxes);
+            }
+            else if (Recovering)
+            {
+                Recover();
+            }
+        }
+
+        protected virtual bool TryMoveBox(MoveDir direction, List<PacGridBox> gridBoxes, bool actuallyMove = true)
+        {
+            var blockers = new List<Blockers>();
+            var horizontal = false;
+            var index = 1;
+
+            if (direction == MoveDir.Up)
+            {
+                blockers = [Blockers.Top, Blockers.TopLeftCorner, Blockers.TopRightCorner];
+                index = -1;
+            }
+            else if (direction == MoveDir.Right)
+            {
+                blockers = [Blockers.Right, Blockers.TopRightCorner, Blockers.BottomRightCorner];
+                horizontal = true;
+            }
+            else if (direction == MoveDir.Left)
+            {
+                blockers = [Blockers.Left, Blockers.TopLeftCorner, Blockers.BottomLeftCorner];
+                horizontal = true;
+                index = -1;
+            }
+            else
+            {
+                // Down is the default so change nothing
+            }
+
+            if (!blockers.Contains(CurrentBox.Blocker))
+            {
+                PacGridBox? targetBox = null;
+
+                if (horizontal)
+                {
+                    targetBox = gridBoxes.Find(x => x.Coordinates.x == CurrentBox.Coordinates.x + index &&
+                                                    x.Coordinates.y == CurrentBox.Coordinates.y);
+                }
+                else
+                {
+                    targetBox = gridBoxes.Find(x => x.Coordinates.x == CurrentBox.Coordinates.x &&
+                                                    x.Coordinates.y == CurrentBox.Coordinates.y + index);
+                }
+
+                if ((targetBox != null && targetBox.Blocker != Blockers.Full) || (targetBox == null && CurrentBox.Teleport))
+                {
+                    if (targetBox == null)
+                    {
+                        targetBox = gridBoxes.First(x => x.Teleport && x != CurrentBox);
+                    }
+
+                    if (actuallyMove)
+                    {
+                        MoveBox(targetBox, gridBoxes);
+                        ChangeDirection(direction);
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        protected void MoveBox(PacGridBox targetBox, List<PacGridBox> gridBoxes)
+        {
+            var currentNeighbors = AStar.GetNeighbors(CurrentBox, gridBoxes);
+
+            if (currentNeighbors.Contains(targetBox))
+            {
+                foreach (var direction in Directions)
+                {
+                    var dirBox = GetBoxInDirection(direction, gridBoxes);
+
+                    if (dirBox == targetBox)
+                    {
+                        ChangeDirection(direction);
+                    }
+                }
+            }
+            else
+            {
+                ChangeDirection(MoveDir.None);
+            }
+
+            CurrentBox.Entities.Remove(Entity);
+            CurrentBox = targetBox;
+            CurrentBox.Entities.Add(Entity);
+        }
+
+        protected void ExitSpawn(List<PacGridBox> gridBoxes)
+        {
+            var entrance = gridBoxes.First(x => x.IsEntrance);
+            var path = AStar.FindPath(CurrentBox, entrance, gridBoxes);
+
+            var targetBox = path[0];
+            MoveBox(targetBox, gridBoxes);
+        }
+
+        protected void ChangeDirection(MoveDir dir)
+        {
+            PreviousDirection = MoveDirection;
+            MoveDirection = dir;
+        }
+        #endregion
+
+        #region Retreat
+        private void Retreat(List<PacGridBox> gridBoxes)
+        {
+            if (RetreatDestination == null)
+            {
+                GetRetreatDestination(gridBoxes);
+            }
+
+            var path = AStar.FindPath(CurrentBox, RetreatDestination!, gridBoxes);
+
+            if (path.Count > 0)
+            {
+                var targetBox = path[0];
+                MoveBox(targetBox, gridBoxes);
+
+                if (CurrentBox == RetreatDestination)
+                {
+                    RetreatDestination = null;
+                }
+            }
+        }
+
+        private void GetRetreatDestination(List<PacGridBox> gridBoxes)
+        {
+            var pacman = gridBoxes.Find(x => x.Entities.Any(x => x.Creature == Creatures.Pacman));
+
+            if (pacman != null)
+            {
+                var validBoxes = new List<PacGridBox>();
+
+                if (pacman.Coordinates.x <= 8 && pacman.Coordinates.y <= 10)
+                { // 1st quadrant
+                    validBoxes = gridBoxes.FindAll(x => x.Coordinates.x > 8 && x.Coordinates.y > 10 && x.Blocker != Blockers.Full);
+                }
+                else if (pacman.Coordinates.x > 8 && pacman.Coordinates.y <= 10)
+                { // 2nd quadrant
+                    validBoxes = gridBoxes.FindAll(x => x.Coordinates.x <= 8 && x.Coordinates.y > 10 && x.Blocker != Blockers.Full);
+                }
+                else if (pacman.Coordinates.x <= 8 && pacman.Coordinates.y > 10)
+                { // 3rd quadrant
+                    validBoxes = gridBoxes.FindAll(x => x.Coordinates.x > 8 && x.Coordinates.y <= 10 && x.Blocker != Blockers.Full);
+                }
+                else
+                { // 4th quadrant
+                    validBoxes = gridBoxes.FindAll(x => x.Coordinates.x <= 8 && x.Coordinates.y <= 10 && x.Blocker != Blockers.Full);
+                }
+
+                RetreatDestination = validBoxes.Shuffle().First();
+            }
+        }
+
+        public void EndRetreat()
+        {
+            RetreatDestination = null;
+            Retreating = false;
+        }
+        #endregion
+
+        #region Going Home
+        private void GoHome(List<PacGridBox> gridBoxes)
+        {
+            var path = AStar.FindPath(CurrentBox, StartBox, gridBoxes);
+
+            if (path.Count > 0)
+            {
+                var targetBox = path[0];
+                MoveBox(targetBox, gridBoxes);
+
+                if (CurrentBox == StartBox)
+                {
+                    GoingHome = false;
+                    Recovering = true;
+
+                    ChangeDirection(MoveDir.None);
+                }
+            }
+        }
+        #endregion
+
+        #region Recover
+        private void Recover()
+        {
+            if (Recovering)
+            {
+                recoverElapsed += RecoverTickTime;
+
+                if (recoverElapsed >= _recoveryTime)
+                {
+                    Recovering = false;
+                    recoverElapsed = 0;
+                }
+            }
+        }
+        #endregion
+
+        #region Helper
+        protected PacGridBox? GetBoxInDirection(MoveDir direction, List<PacGridBox> gridBoxes)
+        {
+            var horizontal = false;
+            var index = 1;
+
+            if (direction == MoveDir.Up)
+            {
+                index = -1;
+            }
+            else if (direction == MoveDir.Right)
+            {
+                horizontal = true;
+            }
+            else if (direction == MoveDir.Left)
+            {
+                horizontal = true;
+                index = -1;
+            }
+            else
+            {
+                // Down is the default so change nothing
+            }
+
+            PacGridBox? targetBox = null;
+
+            if (horizontal)
+            {
+                targetBox = gridBoxes.Find(x => x.Coordinates.x == CurrentBox.Coordinates.x + index &&
+                                                x.Coordinates.y == CurrentBox.Coordinates.y);
+            }
+            else
+            {
+                targetBox = gridBoxes.Find(x => x.Coordinates.x == CurrentBox.Coordinates.x &&
+                                                x.Coordinates.y == CurrentBox.Coordinates.y + index);
+            }
+
+            return targetBox;
+        }
+
+        protected PacGridBox? GetBoxNTilesInDirection(PacGridBox startBox, MoveDir direction, int distance, List<PacGridBox> gridBoxes)
+        {
+            int dx = 0;
+            int dy = 0;
+
+            switch (direction)
+            {
+                case MoveDir.Up: dy = -1; break;
+                case MoveDir.Down: dy = 1; break;
+                case MoveDir.Left: dx = -1; break;
+                case MoveDir.Right: dx = 1; break;
+            }
+
+            var targetX = startBox.Coordinates.x + (dx * distance);
+            var targetY = startBox.Coordinates.y + (dy * distance);
+
+            return gridBoxes.Find(x => x.Coordinates.x == targetX && x.Coordinates.y == targetY);
+        }
+
+        protected MoveDir GetOppositeDirection(MoveDir dir)
+        {
+            return dir switch
+            {
+                MoveDir.Up => MoveDir.Down,
+                MoveDir.Down => MoveDir.Up,
+                MoveDir.Left => MoveDir.Right,
+                _ => MoveDir.Left
+            };
+        }
+        #endregion
+    }
+}

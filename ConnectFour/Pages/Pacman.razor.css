@@ -1,0 +1,178 @@
+﻿
+.page-container{
+    display: flex;
+    gap: 15px;
+}
+
+.game-map {
+    display: grid;
+    grid-template-columns: repeat(17, 25px);
+    position: relative;
+    margin-bottom: 40px;
+    border: solid 8px black;
+}
+
+.grid-box {
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: black;
+    position: relative;
+}
+
+.pacman {
+    border-radius: 25px;
+    height: 20px;
+    width: 20px;
+    background-color: yellow;
+    z-index: 1;
+    position: absolute;
+}
+
+.powered-up {
+    animation: pacmanFlash 1s infinite;
+}
+
+.ghost {
+    height: 22px;
+    width: 22px;
+    border-radius: 10px 10px 0 0;
+    z-index: 2;
+    position: absolute;
+}
+
+.red-ghost {
+    background-color: red;
+}
+
+.blue-ghost {
+    background-color: aqua;
+}
+
+.pink-ghost {
+    background-color: hotpink;
+}
+
+.orange-ghost {
+    background-color: orange;
+}
+
+.ghost-retreat {
+    animation: ghostRetreat 1s infinite;
+}
+
+.ghost-go-home{
+    background-color: rgba(0, 0, 0, 0);
+    border: solid 2px white;
+}
+
+.pellet {
+    background-color: yellow;
+    height: 5px;
+    width: 5px;
+    border-radius: 10px;
+}
+
+.power-pellet{
+    background-color: white;
+    height: 10px;
+    width: 10px;
+    border-radius: 10px;
+    animation: pelletFlash 1s infinite;
+}
+
+.score-container{
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 22px;
+}
+
+.message-container{
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+
+@keyframes pelletFlash {
+    0% {
+        background-color: white;
+    }
+    50% {
+        background-color: orangered;
+    }
+    100% {
+        background-color: white;
+    }
+}
+
+@keyframes pacmanFlash {
+    0% {
+        background-color: yellow;
+    }
+
+    50% {
+        background-color: orangered;
+    }
+
+    100% {
+        background-color: yellow;
+    }
+}
+
+@keyframes ghostRetreat {
+    0% {
+        background-color: blue;
+    }
+
+    50% {
+        background-color: white;
+    }
+
+    100% {
+        background-color: blue;
+    }
+}
+
+.top-left-blocker {
+    border-top: solid 2px deepskyblue;
+    border-left: solid 2px deepskyblue;
+}
+
+.top-right-blocker {
+    border-top: solid 2px deepskyblue;
+    border-right: solid 2px deepskyblue;
+}
+
+.bottom-left-blocker {
+    border-bottom: solid 2px deepskyblue;
+    border-left: solid 2px deepskyblue;
+}
+
+.bottom-right-blocker {
+    border-bottom: solid 2px deepskyblue;
+    border-right: solid 2px deepskyblue;
+}
+
+.top-blocker {
+    border-top: solid 2px deepskyblue;
+}
+
+.full-blocker {
+    background-color: deepskyblue;
+}
+
+.left-blocker {
+    border-left: solid 2px deepskyblue;
+}
+
+.right-blocker {
+    border-right: solid 2px deepskyblue;
+}
+
+.bottom-blocker {
+    border-bottom: solid 2px deepskyblue;
+}

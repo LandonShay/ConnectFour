@@ -1,0 +1,49 @@
+﻿namespace ConnectFour.Data.Pacman
+{
+    public class PacGridBox
+    {
+        public Blockers Blocker { get; set; } = Blockers.None;
+        public BoxItem Item { get; set; } = BoxItem.None;
+        public List<PacEntity> Entities { get; set; } = new();
+        public (int x, int y) Coordinates { get; set; }
+        public bool InGhostSpawn { get; set; }
+        public bool IsEntrance { get; set; }
+        public bool Teleport { get; set; }
+
+        // Pathfinding
+        public int GCost;
+        public int HCost;
+        public PacGridBox? Parent = null;
+        public int FCost => GCost + HCost;
+
+        public enum BoxItem
+        {
+            None,
+            Pellet,
+            PowerPellet
+        }
+
+        public enum Creatures
+        {
+            Pacman,
+            RedGhost,
+            OrangeGhost,
+            BlueGhost,
+            PinkGhost
+        }
+
+        public enum Blockers
+        {
+            None,
+            TopLeftCorner,
+            TopRightCorner,
+            BottomLeftCorner,
+            BottomRightCorner,
+            Top,
+            Left,
+            Right,
+            Bottom,
+            Full,
+        }
+    }
+}

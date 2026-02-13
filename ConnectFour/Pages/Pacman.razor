@@ -1,0 +1,56 @@
+﻿@page "/pac"
+@using ConnectFour.Data
+@using static ConnectFour.Data.Pacman.PacGridBox
+@implements IDisposable
+
+<div class="page-container">
+    <div class="game-map" @onkeydown="ChangeDirection" tabindex="0">
+        @foreach (var box in GridBoxes)
+        {
+            <div class="grid-box @(GetBlockerCss(box.Blocker))">
+                @if (box.Item == BoxItem.Pellet)
+                {
+                    <div class="pellet"></div>
+                }
+                else if (box.Item == BoxItem.PowerPellet)
+                {
+                    <div class="power-pellet"></div>
+                }
+
+                @if (box.Entities.Count > 0)
+                {
+                    <div class="@GetCreatureCss(box.Entities) @GetPacmanCss(box.Entities)"></div>
+                }
+            </div>
+        }
+    </div>
+    <div class="score-container">
+        <span>Score</span>
+        <span>@Score</span>
+    </div>
+</div>
+<div class="message-container">
+    @if (Status != GameStatus.None)
+    {
+        if (Status == GameStatus.Win)
+        {
+            <span>You win!</span>
+        }
+        else
+        {
+            <span>You lose!</span>
+        }
+        <button @onclick="ResetMap">Play Again</button>
+    }
+</div>
+
+@* <div class="inputs">
+    <div>
+        <div class="input-box" @onclick="() => ChangeMove(Move.Up)"></div>
+    </div>
+    <div class="bottom-inputs">
+        <div class="input-box" @onclick="() => ChangeMove(Move.Left)"></div>
+        <div class="input-box" @onclick="() => ChangeMove(Move.Down)"></div>
+        <div class="input-box" @onclick="() => ChangeMove(Move.Right)"></div>
+    </div>
+</div> *@
