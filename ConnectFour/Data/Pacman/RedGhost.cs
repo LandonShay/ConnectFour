@@ -1,12 +1,13 @@
 ﻿using static ConnectFour.Data.Pacman.PacGridBox;
+using static ConnectFour.Pages.Pacman;
 
 namespace ConnectFour.Data.Pacman
 { // red straight up chases you
     public class RedGhost : PacGhost
     {
-        public RedGhost() { TickTime = .35f; RetreatTickTime = .9f; }
+        public RedGhost() { TickTime = .3f; RetreatTickTime = .9f; }
 
-        public override void Move(List<PacGridBox> gridBoxes)
+        public override void Move(List<PacGridBox> gridBoxes, MoveDir playerMoveDir)
         {
             if (!Retreating && !Recovering && !GoingHome)
             {
@@ -41,7 +42,7 @@ namespace ConnectFour.Data.Pacman
             }
             else
             {
-                base.Move(gridBoxes);
+                base.Move(gridBoxes, playerMoveDir);
             }
         }
     }

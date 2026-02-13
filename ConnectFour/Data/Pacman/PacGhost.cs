@@ -29,7 +29,7 @@ namespace ConnectFour.Data.Pacman
         protected readonly float _recoveryTime = 2.5f;
 
         #region Movement
-        public virtual void Move(List<PacGridBox> gridBoxes) 
+        public virtual void Move(List<PacGridBox> gridBoxes, MoveDir playerMoveDir) 
         {
             if (Retreating)
             {
@@ -282,6 +282,25 @@ namespace ConnectFour.Data.Pacman
             }
 
             return targetBox;
+        }
+
+        protected PacGridBox? GetBoxNTilesInDirection(PacGridBox startBox, MoveDir direction, int distance, List<PacGridBox> gridBoxes)
+        {
+            int dx = 0;
+            int dy = 0;
+
+            switch (direction)
+            {
+                case MoveDir.Up: dy = -1; break;
+                case MoveDir.Down: dy = 1; break;
+                case MoveDir.Left: dx = -1; break;
+                case MoveDir.Right: dx = 1; break;
+            }
+
+            var targetX = startBox.Coordinates.x + (dx * distance);
+            var targetY = startBox.Coordinates.y + (dy * distance);
+
+            return gridBoxes.Find(x => x.Coordinates.x == targetX && x.Coordinates.y == targetY);
         }
 
         protected MoveDir GetOppositeDirection(MoveDir dir)

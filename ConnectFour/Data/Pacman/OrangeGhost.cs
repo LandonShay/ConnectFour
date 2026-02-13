@@ -7,7 +7,7 @@ namespace ConnectFour.Data.Pacman
     {
         public OrangeGhost() { TickTime = .6f; RetreatTickTime = .9f; }
 
-        public override void Move(List<PacGridBox> gridBoxes)
+        public override void Move(List<PacGridBox> gridBoxes, MoveDir playerMoveDir)
         {
             if (!Retreating && !Recovering && !GoingHome)
             {
@@ -52,7 +52,7 @@ namespace ConnectFour.Data.Pacman
             }
             else
             {
-                base.Move(gridBoxes);
+                base.Move(gridBoxes, playerMoveDir);
             }
         }
 

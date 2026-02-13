@@ -162,7 +162,7 @@ namespace ConnectFour.Pages
                         break;
                     }
 
-                    ghost.Move(GridBoxes);
+                    ghost.Move(GridBoxes, CurrentMoveDirection);
 
                     CheckWin();
                     await InvokeAsync(StateHasChanged);
