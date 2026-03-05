@@ -1,0 +1,20 @@
+﻿@page "/wordle"
+@using ConnectFour.Models.Wordle
+
+<div class="page-container" @onclick="FocusInput">
+    <div class="wordle-container">
+        @foreach (var box in Boxes)
+        {
+            if (box.Row > ActiveBox.Row)
+            {
+                <div class="box disabled-box @GetBoxClass(box)">@box.Letter</div>
+
+            }
+            else
+            {
+                <div class="box @GetBoxClass(box)">@box.Letter</div>
+            }
+        }
+    </div>
+    <input @ref="InputRef" id="wordle-input" type="text" @onkeydown="e => CheckWord(e)" />
+</div>
