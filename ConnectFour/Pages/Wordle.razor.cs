@@ -1,22 +1,14 @@
 ﻿using ConnectFour.Models.Wordle;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.JSInterop;
-using System.Diagnostics.Metrics;
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using static System.Net.Mime.MediaTypeNames;
+using System.Text.Json;
 
 namespace ConnectFour.Pages
 {
     public partial class Wordle
     {
-        // pick 5 letter word from dictionary
-        // 5 attempts to type the full word out. after submitting, it is evaluated
-        // one letter at a time. if the letter is correct, highlight green. if the letter is correct but in the wrong spot, highlight yellow
-
-        [Inject] public required IJSRuntime JS { get; set; }
-
+        // todo: add a submit button (or on enter). check each letter in the target word and the current row and determine... stuff
         private List<string> TargetWord { get; set; } = new();
         private List<WordleBox> Boxes { get; set; } = new();
 
