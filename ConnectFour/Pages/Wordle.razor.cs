@@ -123,7 +123,7 @@ namespace ConnectFour.Pages
                 }
             }
 
-            if (Boxes.All(x => x.Status == WordleIndicator.Correct))
+            if (boxes.All(x => x.Status == WordleIndicator.Correct))
             {
                 GameStatus = WordleGameStatus.Win;
             }
