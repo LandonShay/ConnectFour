@@ -2,6 +2,7 @@
 .page-container{
     display: flex;
     gap: 15px;
+    padding: 25px;
 }
 
 .game-map {

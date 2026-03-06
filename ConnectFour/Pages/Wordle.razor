@@ -1,0 +1,40 @@
+﻿@page "/wordle"
+@using ConnectFour.Models.Wordle
+
+<div class="page-container" @onclick="FocusInput">
+    <h2>Guess the Word</h2>
+    <div class="wordle-container">
+        @foreach (var box in Boxes)
+        {
+            if (box.Row > ActiveBox.Row)
+            {
+                <div class="box disabled-box @GetBoxClass(box)">@box.Letter</div>
+
+            }
+            else
+            {
+                <div class="box @GetBoxClass(box)">@box.Letter</div>
+            }
+        }
+    </div>
+
+    @if (GameStatus == WordleGameStatus.None)
+    {
+        <button class="wordle-button" @onclick="SubmitWord">Submit</button>
+    }
+    else
+    {
+        <button class="wordle-button" @onclick="RestartGame">Play Again</button>    
+    } 
+
+    @if (GameStatus == WordleGameStatus.Win)
+    {
+        <h2>Correct!</h2>
+    }
+    else if (GameStatus == WordleGameStatus.Loss)
+    {
+        <h2>Incorrect</h2>
+        <h3>The Word Was: @BuildTargetWord()</h3>
+    }
+    <input @ref="InputRef" id="wordle-input" type="text" @onkeydown="e => CheckWord(e)" />
+</div>
