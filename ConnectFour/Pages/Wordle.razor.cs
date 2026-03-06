@@ -8,23 +8,40 @@ namespace ConnectFour.Pages
 {
     public partial class Wordle
     {
-        // todo: add a submit button (or on enter). check each letter in the target word and the current row and determine... stuff
         private List<string> TargetWord { get; set; } = new();
         private List<WordleBox> Boxes { get; set; } = new();
+
+        private WordleGameStatus GameStatus { get; set; } = WordleGameStatus.None;
 
         private WordleBox ActiveBox { get; set; } = new();
         private ElementReference InputRef;
 
+        private enum WordleGameStatus
+        {
+            None,
+            Win,
+            Loss
+        }
+
         #region Init
         protected override void OnInitialized()
         {
-            PickWord();
-            GenerateBoxes();
+            RestartGame();
         }
 
         protected override void OnAfterRender(bool firstRender)
         {
             FocusInput();
+        }
+
+        private void RestartGame()
+        {
+            Boxes.Clear();
+            TargetWord.Clear();
+            GameStatus = WordleGameStatus.None;
+
+            PickWord();
+            GenerateBoxes();
         }
 
         private void PickWord()
@@ -75,19 +92,71 @@ namespace ConnectFour.Pages
         }
         #endregion
 
+        private void SubmitWord()
+        {
+            var boxes = Boxes.FindAll(x => x.Row == ActiveBox.Row).OrderBy(x => x.Column).ToList();
+
+            if (boxes.Any(x => x.Letter == string.Empty))
+            {
+                return;
+            }
+            
+            for (int i = 0; i < 5; i++)
+            {
+                var targetLetter = TargetWord[i];
+                var box = boxes[i];
+
+                if (box.Letter.ToLower() == targetLetter.ToLower())
+                {
+                    box.Status = WordleIndicator.Correct;
+                }
+                else
+                {
+                    if (TargetWord.Any(x => x.ToLower() == box.Letter.ToLower()))
+                    {
+                        box.Status = WordleIndicator.WrongSpot;
+                    }
+                    else
+                    {
+                        box.Status = WordleIndicator.Wrong;
+                    }
+                }
+            }
+
+            if (Boxes.All(x => x.Status == WordleIndicator.Correct))
+            {
+                GameStatus = WordleGameStatus.Win;
+            }
+            else if (ActiveBox.Row < 5)
+            {
+                ActiveBox = Boxes.First(x => x.Row == ActiveBox.Row + 1 && x.Column == 1);
+                FocusInput();
+            }
+            else
+            {
+                GameStatus = WordleGameStatus.Loss;
+            }
+        }
+
         private async void CheckWord(KeyboardEventArgs e)
         {
             var key = e.Key.ToLower();
 
             if (key == "backspace")
             {
-                var previousBox = Boxes.FirstOrDefault(x => x.Row == ActiveBox.Row && x.Column == ActiveBox.Column - 1);
-
-                ActiveBox.Letter = string.Empty;
-
-                if (previousBox != null)
+                if (ActiveBox.Letter != string.Empty)
                 {
-                    ActiveBox = previousBox;
+                    ActiveBox.Letter = string.Empty;
+                }
+                else
+                {
+                    var previousBox = Boxes.FirstOrDefault(x => x.Row == ActiveBox.Row && x.Column == ActiveBox.Column - 1);
+
+                    if (previousBox != null)
+                    {
+                        ActiveBox = previousBox;
+                        ActiveBox.Letter = string.Empty;
+                    }
                 }
             }
             else if (Regex.IsMatch(key, "^[a-z]$")) // if a single lowercase letter
@@ -106,6 +175,18 @@ namespace ConnectFour.Pages
             }
         }
 
+        private string BuildTargetWord()
+        {
+            var word = string.Empty;
+
+            foreach (var letter in TargetWord)
+            {
+                word += letter;
+            }
+
+            return word;
+        }
+
         private async void FocusInput()
         {
             await InputRef.FocusAsync();
@@ -113,12 +194,13 @@ namespace ConnectFour.Pages
 
         private string GetBoxClass(WordleBox box)
         {
-            if (box.HasLetter)
+            return box.Status switch 
             {
-
-            }
-
-            return "empty";
+                WordleIndicator.WrongSpot => "almost-box",
+                WordleIndicator.Correct => "correct-box",
+                WordleIndicator.Wrong => "incorrect-box",
+                _ => string.Empty
+            };
         }
     }
 }

@@ -14,6 +14,7 @@
     public enum WordleIndicator
     {
         None,
+        Wrong,
         WrongSpot,
         Correct
     }
