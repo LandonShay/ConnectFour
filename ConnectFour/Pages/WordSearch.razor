@@ -1,1 +1,21 @@
 ﻿@page "/wordsearch"
+
+<div class="page-container">
+    <div class="word-grid @GetGridSizeCss()">
+        @foreach(var box in Boxes)
+        {
+            <div class="word-box">
+                <span>@box.Letter</span>
+            </div>
+        }
+    </div>
+    <div class="glossary">
+        @foreach (var word in Words)
+        {
+            <span>@word.Word</span>
+        }
+    </div>
+    <div class="difficulty-container">
+        <button @onclick="() => SelectDifficulty(DifficultyLevel.Easy)">Easy</button>
+    </div>
+</div>

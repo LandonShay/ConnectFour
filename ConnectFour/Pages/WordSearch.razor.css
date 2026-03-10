@@ -1,1 +1,43 @@
 ﻿
+.page-container {
+    padding: 25px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 600px;
+}
+
+.word-grid {
+    border: solid 1px white;
+    border-radius: 5px;
+    width: fit-content;
+    padding: 25px;
+    display: grid;
+    background-color: rgba(255, 255, 255, .2);
+}
+
+.easy-grid {
+    grid-template-columns: repeat(15, auto); 
+}
+
+.word-box{
+    padding: 5px;
+    font-size: 18px;
+}
+
+    .word-box:hover {
+        background-color: rgba(255, 255, 255, .2);
+    }
+
+.glossary {
+    display: grid;
+    grid-template-columns: auto auto auto auto auto auto;
+    gap: 20px;
+    border: solid 1px white;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, .2);
+    padding: 15px;
+    margin-top: 15px;
+}
