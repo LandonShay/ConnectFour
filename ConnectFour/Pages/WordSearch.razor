@@ -1,21 +1,29 @@
 ﻿@page "/wordsearch"
 
 <div class="page-container">
-    <div class="word-grid @GetGridSizeCss()">
-        @foreach(var box in Boxes)
-        {
-            <div class="word-box">
-                <span>@box.Letter</span>
-            </div>
-        }
-    </div>
-    <div class="glossary">
-        @foreach (var word in Words)
-        {
-            <span>@word.Word</span>
-        }
-    </div>
-    <div class="difficulty-container">
-        <button @onclick="() => SelectDifficulty(DifficultyLevel.Easy)">Easy</button>
-    </div>
+    @if (GameStatus == WordSearchGameStatus.Ongoing)
+    {
+        <div class="word-grid @GetGridSizeCss()">
+            @foreach(var box in Boxes)
+            {
+                <div class="word-box">
+                    <span>@box.Letter</span>
+                </div>
+            }
+        </div>
+        <div class="glossary">
+            @foreach (var word in Words)
+            {
+                <span>@word.Word</span>
+            }
+        </div>
+    }
+    else if (GameStatus == WordSearchGameStatus.ChooseDifficulty)
+    {
+        <div class="difficulty-container">
+            <button class="word-search-button" @onclick="() => SelectDifficulty(DifficultyLevel.Easy)">Easy</button>
+            <button class="word-search-button" @onclick="() => SelectDifficulty(DifficultyLevel.Medium)">Medium</button>
+            <button class="word-search-button" @onclick="() => SelectDifficulty(DifficultyLevel.Hard)">Hard</button>
+        </div>
+    }
 </div>

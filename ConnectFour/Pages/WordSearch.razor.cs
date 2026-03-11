@@ -4,13 +4,10 @@ namespace ConnectFour.Pages
 {
     public partial class WordSearch
     {
-        // pick words from a dictionary
-        // determine how each word will be generated (horizontal, vertical, diagonal up, diagonal down)
-        // generate an empty grid, place the words on the grid with their orientation, ensuring no invalid placements
-        // fill in the remaining empty spots with random letters
-
         // each letter will know if it's part of a word or not and its index in the word
         // click each letter individually in sequence. if it's part of the word and the click sequence is correct, it is valid. otherwise it will empty your selection
+
+        // add a timer that begins when you select a difficulty
 
         private DifficultyLevel Difficulty { get; set; }
         private List<WordSearchBox> Boxes { get; set; } = new();
@@ -18,11 +15,6 @@ namespace ConnectFour.Pages
         private WordSearchGameStatus GameStatus { get; set; } = WordSearchGameStatus.ChooseDifficulty;
         private List<WordOrientation> Orientations { get; set; } = [WordOrientation.Horizontal, WordOrientation.Vertical, WordOrientation.DiagonalUp, WordOrientation.DiagonalDown];
         private List<string> Letters { get; set; } = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
-
-        protected override void OnInitialized()
-        {
-
-        }
 
         private void SelectDifficulty(DifficultyLevel difficulty)
         {
@@ -36,7 +28,26 @@ namespace ConnectFour.Pages
                 PickWordsByLength(words, 1, 3);
                 GenerateGrid(15, 7);
             }
+            else if (difficulty == DifficultyLevel.Medium)
+            {
+                PickWordsByLength(words, 1, 6);
+                PickWordsByLength(words, 4, 5);
+                PickWordsByLength(words, 3, 4);
+                PickWordsByLength(words, 2, 3);
+                GenerateGrid(20, 12);
+            }
+            else if (difficulty == DifficultyLevel.Hard)
+            {
+                PickWordsByLength(words, 2, 7);
+                PickWordsByLength(words, 2, 6);
+                PickWordsByLength(words, 4, 5);
+                PickWordsByLength(words, 5, 4);
+                PickWordsByLength(words, 5, 3);
+                GenerateGrid(25, 16);
+            }
 
+            GameStatus = WordSearchGameStatus.Ongoing;
+            Difficulty = difficulty;
         }
 
         private void GenerateGrid(int gridX, int gridY)
