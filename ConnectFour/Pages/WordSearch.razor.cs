@@ -17,6 +17,7 @@ namespace ConnectFour.Pages
         private List<WordSearchWord> Words { get; set; } = new();
         private WordSearchGameStatus GameStatus { get; set; } = WordSearchGameStatus.ChooseDifficulty;
         private List<WordOrientation> Orientations { get; set; } = [WordOrientation.Horizontal, WordOrientation.Vertical, WordOrientation.DiagonalUp, WordOrientation.DiagonalDown];
+        private List<string> Letters { get; set; } = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
 
         protected override void OnInitialized()
         {
@@ -33,27 +34,19 @@ namespace ConnectFour.Pages
                 PickWordsByLength(words, 2, 5);
                 PickWordsByLength(words, 2, 4);
                 PickWordsByLength(words, 1, 3);
-                GenerateGrid(15);
+                GenerateGrid(15, 7);
             }
 
         }
 
-        private void GenerateGrid(int gridSize)
+        private void GenerateGrid(int gridX, int gridY)
         {
-            var row = 1;
-            var column = 1;
-
-            for (int i = 0; i < gridSize * 2; i++)
+            for (int row = 1; row <= gridY; row++)
             {
-                var box = new WordSearchBox { Coor = (row, column) };
-                Boxes.Add(box);
-
-                column++;
-
-                if (column == gridSize + 1)
+                for (int column = 1; column <= gridX; column++)
                 {
-                    column = 1;
-                    row++;
+                    var box = new WordSearchBox { Coor = (row, column) };
+                    Boxes.Add(box);
                 }
             }
 
@@ -61,13 +54,6 @@ namespace ConnectFour.Pages
             {
                 foreach (var word in Words)
                 {
-                    // pick a random open box on the grid
-                    // using the orientation, attempt to place each letter in the orientation
-                    // if the entire word is placed without issue, continue
-                    // if a letter is attempted to be placed in an invalid spot, undo placement and start over. keep a record of the boxes tried and do not try the same box twice
-                    // attempt this up to the maximum number of open grid spaces. if all fail, change the word's orientation and try again, never resuing an already used orientation
-                    // if all orientations fail, throw error
-
                     var orientationsAttempted = new List<WordOrientation>();
                     var attemptedBoxes = new List<WordSearchBox>();
 
@@ -79,8 +65,9 @@ namespace ConnectFour.Pages
                         {
                             attemptedBoxes.Add(startBox);
 
-                            var nextBox = startBox;
                             var wordBoxes = new List<WordSearchBox>();
+                            var nextBox = startBox;
+                            var retry = false;
 
                             foreach (var letter in word.Word)
                             {
@@ -97,10 +84,10 @@ namespace ConnectFour.Pages
 
                                     nextBox = word.Orientation switch
                                     {
-                                        WordOrientation.Vertical => Boxes.FirstOrDefault(x => x.Coor.x == nextBox.Coor.x + 1 && x.Coor.y == nextBox.Coor.y),
-                                        WordOrientation.DiagonalUp => Boxes.FirstOrDefault(x => x.Coor.x == nextBox.Coor.x + 1 && x.Coor.y == nextBox.Coor.y - 1),
+                                        WordOrientation.Vertical => Boxes.FirstOrDefault(x => x.Coor.x == nextBox.Coor.x && x.Coor.y == nextBox.Coor.y + 1),
+                                        WordOrientation.DiagonalUp => Boxes.FirstOrDefault(x => x.Coor.x == nextBox.Coor.x - 1 && x.Coor.y == nextBox.Coor.y + 1),
                                         WordOrientation.DiagonalDown => Boxes.FirstOrDefault(x => x.Coor.x == nextBox.Coor.x + 1 && x.Coor.y == nextBox.Coor.y + 1),
-                                        _ => Boxes.FirstOrDefault(x => x.Coor.x == nextBox.Coor.x && x.Coor.y == nextBox.Coor.y + 1), // horizontal
+                                        _ => Boxes.FirstOrDefault(x => x.Coor.x == nextBox.Coor.x + 1 && x.Coor.y == nextBox.Coor.y), // horizontal
                                     };
                                 }
 
@@ -112,11 +99,15 @@ namespace ConnectFour.Pages
                                         box.Letter = string.Empty;
                                     }
 
+                                    retry = true;
                                     break;
                                 }
                             }
 
-                            break;
+                            if (!retry)
+                            {
+                                break;
+                            }
                         }
                         else
                         {
@@ -136,16 +127,23 @@ namespace ConnectFour.Pages
                         }
                     }
                 }
+
+                foreach (var box in Boxes.Where(x => x.Letter == string.Empty))
+                {
+                    box.Letter = Letters.Shuffle().First();
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
+                ResetGame();
             }
         }
 
         private void ResetGame()
         {
             Words.Clear();
+            Boxes.Clear();
             GameStatus = WordSearchGameStatus.ChooseDifficulty;
         }
 
